@@ -2,7 +2,7 @@
   "format_version": "1.20.10",
   "minecraft:recipe_shaped": {
     "description": {
-      "identifier": "eclipse:shop_recipe"
+      "identifier": "coded:shop_recipe"
     },
     "tags": [
       "crafting_table"
@@ -20,7 +20,7 @@
       }
     },
     "result": {
-      "item": "eclipse:shop",
+      "item": "coded:shop",
       "count": 1
     }
   }

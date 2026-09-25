@@ -7,7 +7,7 @@ import { CATEGORIES } from './items.js'
 // Server settings - change these to fit your server
 // ---------------------------------------------------------------------------
 const SHOP_NAME = '§l§aEclipse Shøp§r'   // name with its colour codes
-const SHOP_ITEM = 'eclipse:shop'          // item that opens the shop
+const SHOP_ITEM = 'coded:shop'          // item that opens the shop
 const MONEY_OBJECTIVE = 'money'          // scoreboard that holds player money
 const CURRENCY = '$'
 const GIVE_SHOP_ON_FIRST_JOIN = true     // new players get a shop book

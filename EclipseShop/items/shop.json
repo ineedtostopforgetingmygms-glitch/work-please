@@ -2,7 +2,7 @@
   "format_version": "1.20.0",
   "minecraft:item": {
     "description": {
-      "identifier": "eclipse:shop",
+      "identifier": "coded:shop",
       "menu_category": {
         "category": "items"
       }
