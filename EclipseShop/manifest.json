@@ -1,8 +1,8 @@
 {
   "format_version": 2,
   "header": {
-    "name": "SkyGen Shop [v2.0.0]",
-    "description": "§bSkyGen Shop§r - buy & sell items with your money score. Built for SkyGen servers.",
+    "name": "Eclipse Shop [v2.0.0]",
+    "description": "§bEclipse Shop§r - buy & sell items with your money score.",
     "uuid": "cf9abfa9-7246-4326-b8e9-e8b96e1cc97e",
     "version": [
       2,
@@ -41,7 +41,7 @@
   "settings": [
     {
       "type": "label",
-      "text": "Choose the selling percent from §610 to 100 percent §fof the buying §fprice of each item\n\nBelow are examples based on buying one §bDiamond §ffor §4-$5500\n\n§a- §610 percent: §aSell §bDiamond §ffor §a+$550\n- §630 percent: §aSell §bDiamond §ffor §a+$1650\n- §660 percent: §aSell §bDiamond §ffor §a+$3300\n- §690 percent: §aSell §bDiamond §ffor §a+$4950\n- §6100 percent: §aSell §bDiamond §ffor §a+$5500\n\n§fThe lowest §asale §fof any item will always be §a+$1\n\n§dHopefully you get the point and enjoy using SkyGen Shop :)"
+      "text": "Choose the selling percent from §610 to 100 percent §fof the buying §fprice of each item\n\nBelow are examples based on buying one §bDiamond §ffor §4-$5500\n\n§a- §610 percent: §aSell §bDiamond §ffor §a+$550\n- §630 percent: §aSell §bDiamond §ffor §a+$1650\n- §660 percent: §aSell §bDiamond §ffor §a+$3300\n- §690 percent: §aSell §bDiamond §ffor §a+$4950\n- §6100 percent: §aSell §bDiamond §ffor §a+$5500\n\n§fThe lowest §asale §fof any item will always be §a+$1\n\n§dHopefully you get the point and enjoy using Eclipse Shop :)"
     }
   ],
   "subpacks": [
@@ -108,7 +108,7 @@
   ],
   "metadata": {
     "authors": [
-      "SkyGen"
+      "Eclipse"
     ]
   }
 }

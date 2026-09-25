@@ -1,11 +1,11 @@
-SkyGen Shop
-Based on mvShop v1.0.6 by mvfsullivan, updated and rebranded for SkyGen.
+Eclipse Shop
+Based on mvShop v1.0.6 by mvfsullivan, updated and rebranded as Eclipse Shop.
 
 Setup:
 - Money is stored on the "money" scoreboard (same as mvShop, so balances carry over).
-- New players get a SkyGen Shop book the first time they join.
+- New players get an Eclipse Shop book the first time they join.
 - The book can also be crafted: 3 paper + 1 book (paper, paper / paper, book),
-  or given with: /give @s skygen:shop
+  or given with: /give @s eclipse:shop
 - Change the shop name, scoreboard, currency symbol and first-join book at the
   top of scripts/index.js. Prices are in scripts/items.js.
 - Pick the sell percent (10-100% of the buy price) in the pack's settings.
@@ -13,8 +13,8 @@ Setup:
 Changelog:
 ------------------------------------------------------
 
-2.0.0 (SkyGen)
-- Rebranded to SkyGen Shop (new item skygen:shop, new icon, new pack UUIDs)
+2.0.0 (Eclipse)
+- Rebranded to Eclipse Shop (new item eclipse:shop, new icon, new pack UUIDs)
 - Updated to Script API @minecraft/server 2.0.0 / @minecraft/server-ui 2.0.0
   (works on Minecraft 1.21.90 and newer, including 26.x)
 - Fixed 32 items that stopped working after Minecraft renamed them

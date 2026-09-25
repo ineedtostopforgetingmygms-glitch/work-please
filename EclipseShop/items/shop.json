@@ -2,7 +2,7 @@
   "format_version": "1.20.0",
   "minecraft:item": {
     "description": {
-      "identifier": "skygen:shop",
+      "identifier": "eclipse:shop",
       "menu_category": {
         "category": "items"
       }
@@ -16,7 +16,7 @@
         "texture": "book_writable"
       },
       "minecraft:display_name": {
-        "value": "§bSkyGen Shop"
+        "value": "§bEclipse Shop"
       }
     }
   }

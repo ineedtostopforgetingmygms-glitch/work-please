@@ -4,10 +4,10 @@ import { sellPercent } from './percent.js'
 import { CATEGORIES } from './items.js'
 
 // ---------------------------------------------------------------------------
-// Server settings - change these to fit your SkyGen
+// Server settings - change these to fit your server
 // ---------------------------------------------------------------------------
-const SHOP_NAME = 'SkyGen Shop'
-const SHOP_ITEM = 'skygen:shop'          // item that opens the shop
+const SHOP_NAME = 'Eclipse Shop'
+const SHOP_ITEM = 'eclipse:shop'          // item that opens the shop
 const MONEY_OBJECTIVE = 'money'          // scoreboard that holds player money
 const CURRENCY = '$'
 const GIVE_SHOP_ON_FIRST_JOIN = true     // new players get a shop book
@@ -310,8 +310,8 @@ world.afterEvents.itemUse.subscribe(event => {
 world.afterEvents.playerSpawn.subscribe(event => {
   if (!GIVE_SHOP_ON_FIRST_JOIN || !event.initialSpawn) return
   const player = event.player
-  if (player.getDynamicProperty('skygen_shop:received')) return
-  player.setDynamicProperty('skygen_shop:received', true)
+  if (player.getDynamicProperty('eclipse_shop:received')) return
+  player.setDynamicProperty('eclipse_shop:received', true)
   giveItem(player, new ItemStack(SHOP_ITEM, 1))
   player.sendMessage(`§bWelcome! §fUse your §l${SHOP_NAME}§r§f book to buy and sell items.`)
 })
