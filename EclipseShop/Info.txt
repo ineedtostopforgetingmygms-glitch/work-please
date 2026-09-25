@@ -13,6 +13,11 @@ Setup:
 Changelog:
 ------------------------------------------------------
 
+2.1.1
+- Poplar log, leaves and sapling now sit with the other woods, leaves and saplings
+- Other new items grouped with related items (eggs, scutes, heads, flowers, buckets, sulfur)
+- Fixed Heavy Core and Shelf Mushroom icons showing a sheet of block faces
+
 2.1.0
 - Added items from recent Minecraft updates (1.21 to 26.50):
   Ores & Rares: Breeze Rod, Heavy Core, Trial Key, Ominous Trial Key, Resin Clump
