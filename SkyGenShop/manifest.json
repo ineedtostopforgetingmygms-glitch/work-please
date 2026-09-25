@@ -1,0 +1,114 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "SkyGen Shop [v2.0.0]",
+    "description": "§bSkyGen Shop§r - buy & sell items with your money score. Built for SkyGen servers.",
+    "uuid": "cf9abfa9-7246-4326-b8e9-e8b96e1cc97e",
+    "version": [
+      2,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      21,
+      90
+    ]
+  },
+  "modules": [
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "bbf5a1e0-c0fc-412c-9957-a77b207f1548",
+      "version": [
+        2,
+        0,
+        0
+      ],
+      "entry": "scripts/index.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.0.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "2.0.0"
+    }
+  ],
+  "settings": [
+    {
+      "type": "label",
+      "text": "Choose the selling percent from §610 to 100 percent §fof the buying §fprice of each item\n\nBelow are examples based on buying one §bDiamond §ffor §4-$5500\n\n§a- §610 percent: §aSell §bDiamond §ffor §a+$550\n- §630 percent: §aSell §bDiamond §ffor §a+$1650\n- §660 percent: §aSell §bDiamond §ffor §a+$3300\n- §690 percent: §aSell §bDiamond §ffor §a+$4950\n- §6100 percent: §aSell §bDiamond §ffor §a+$5500\n\n§fThe lowest §asale §fof any item will always be §a+$1\n\n§dHopefully you get the point and enjoy using SkyGen Shop :)"
+    }
+  ],
+  "subpacks": [
+    {
+      "folder_name": "10",
+      "name": "§aSell §fat §610 percent §f§fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "20",
+      "name": "§aSell §fat §620 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "30",
+      "name": "§aSell §fat §630 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "40",
+      "name": "§aSell §fat §640 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "50",
+      "name": "§aSell §fat §650 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "60",
+      "name": "§aSell §fat §660 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "70",
+      "name": "§aSell §fat §670 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "80",
+      "name": "§aSell §fat §680 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "90",
+      "name": "§aSell §fat §690 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "100",
+      "name": "§aSell §fat §6100 percent §fthe §4buy §fprice",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "100-50a",
+      "name": "§7< Choose a §aselling §6percent",
+      "memory_tier": 1
+    },
+    {
+      "folder_name": "100-50b",
+      "name": "§aSell §fat §650 percent §fthe §4buy §fprice §d§l(default)",
+      "memory_tier": 1
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "SkyGen"
+    ]
+  }
+}

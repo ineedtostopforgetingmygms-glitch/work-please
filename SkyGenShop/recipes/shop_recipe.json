@@ -1,0 +1,27 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "skygen:shop_recipe"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "AA",
+      "AB"
+    ],
+    "key": {
+      "A": {
+        "item": "minecraft:paper"
+      },
+      "B": {
+        "item": "minecraft:book"
+      }
+    },
+    "result": {
+      "item": "skygen:shop",
+      "count": 1
+    }
+  }
+}
