@@ -6,7 +6,7 @@ import { CATEGORIES } from './items.js'
 // ---------------------------------------------------------------------------
 // Server settings - change these to fit your server
 // ---------------------------------------------------------------------------
-const SHOP_NAME = 'Eclipse Shop'
+const SHOP_NAME = '§l§aEclipse Shøp§r'   // name with its colour codes
 const SHOP_ITEM = 'eclipse:shop'          // item that opens the shop
 const MONEY_OBJECTIVE = 'money'          // scoreboard that holds player money
 const CURRENCY = '$'
@@ -203,7 +203,7 @@ function pageTurn(player) {
 }
 
 function header(player, page) {
-  return `§l§b${SHOP_NAME} §r§8| §a${CURRENCY}${getMoney(player)}${page ? ` §8| §f${page}` : ''}`
+  return `${SHOP_NAME} §8| §a${CURRENCY}${getMoney(player)}${page ? ` §8| §f${page}` : ''}`
 }
 
 function mainMenu(player) {
@@ -230,7 +230,7 @@ function aboutMenu(player) {
   new ActionFormData()
     .title(header(player, 'Help'))
     .body(
-      `§3§lWelcome to the ${SHOP_NAME}!§r\n\n` +
+      `§3§lWelcome to the ${SHOP_NAME}§3§l!§r\n\n` +
       `§f- Pick a category, then an item.\n` +
       `§f- Choose an amount and whether to §cbuy§f or §asell§f.\n` +
       `§f- Items sell back for §6${Math.round(sellPercent * 100)} percent§f of the buy price (never less than §a${CURRENCY}1§f).\n` +
@@ -313,7 +313,7 @@ world.afterEvents.playerSpawn.subscribe(event => {
   if (player.getDynamicProperty('eclipse_shop:received')) return
   player.setDynamicProperty('eclipse_shop:received', true)
   giveItem(player, new ItemStack(SHOP_ITEM, 1))
-  player.sendMessage(`§bWelcome! §fUse your §l${SHOP_NAME}§r§f book to buy and sell items.`)
+  player.sendMessage(`§bWelcome! §fUse your ${SHOP_NAME}§f book to buy and sell items.`)
 })
 
 system.run(() => getObjective())

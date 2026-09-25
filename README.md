@@ -1,5 +1,5 @@
 # work-please
-## Eclipse Shop
+## Eclipse Shøp
 
 A Minecraft Bedrock shop add-on, based on mvShop v1.0.6 and updated for Minecraft 1.21.90+ (Script API 2.0.0).
 
