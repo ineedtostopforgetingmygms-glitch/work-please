@@ -27,6 +27,11 @@ export const OresAndRaresType = [
   { name: "Obsidian", id: "obsidian", cost: 1300, icon: "textures/blocks/obsidian" },
   { name: "Crying Obsidian", id: "crying_obsidian", cost: 3920, icon: "textures/blocks/crying_obsidian" },
   { name: "Experience Bottle", id: "experience_bottle", cost: 100, icon: "textures/items/experience_bottle" },
+  { name: "Breeze Rod", id: "breeze_rod", cost: 1100, icon: "textures/items/breeze_rod" },
+  { name: "Heavy Core", id: "heavy_core", cost: 60000, icon: "textures/blocks/heavy_core" },
+  { name: "Trial Key", id: "trial_key", cost: 1500, icon: "textures/items/trial_key" },
+  { name: "Ominous Trial Key", id: "ominous_trial_key", cost: 6000, icon: "textures/items/ominous_trial_key" },
+  { name: "Resin Clump", id: "resin_clump", cost: 90, icon: "textures/items/resin_clump" },
 ]
 
 // ---- Utilities ----
@@ -46,6 +51,19 @@ export const UtilitiesType = [
   { name: "Powdered Snow Bucket", id: "powder_snow_bucket", cost: 630, icon: "textures/items/bucket_powder_snow" },
   { name: "Tadpole Bucket", id: "tadpole_bucket", cost: 550, icon: "textures/items/bucket_tadpole" },
   { name: "Axolotl Bucket", id: "axolotl_bucket", cost: 670, icon: "textures/items/bucket_axolotl" },
+  { name: "Wind Charge", id: "wind_charge", cost: 150, icon: "textures/items/wind_charge" },
+  { name: "Sulfur Cube Bucket", id: "sulfur_cube_bucket", cost: 670, icon: "textures/items/bucket_sulfur_cube" },
+  { name: "Bolt Armor Trim", id: "bolt_armor_trim_smithing_template", cost: 8000, icon: "textures/items/bolt_armor_trim_smithing_template" },
+  { name: "Flow Armor Trim", id: "flow_armor_trim_smithing_template", cost: 8000, icon: "textures/items/flow_armor_trim_smithing_template" },
+  { name: "Flow Pottery Sherd", id: "flow_pottery_sherd", cost: 1000, icon: "textures/items/flow_pottery_sherd" },
+  { name: "Guster Pottery Sherd", id: "guster_pottery_sherd", cost: 1000, icon: "textures/items/guster_pottery_sherd" },
+  { name: "Scrape Pottery Sherd", id: "scrape_pottery_sherd", cost: 1000, icon: "textures/items/scrape_pottery_sherd" },
+  { name: "Music Disc: Creator", id: "music_disc_creator", cost: 3000, icon: "textures/items/music_disc_creator" },
+  { name: "Music Disc: Creator (Music Box)", id: "music_disc_creator_music_box", cost: 3000, icon: "textures/items/music_disc_creator_music_box" },
+  { name: "Music Disc: Precipice", id: "music_disc_precipice", cost: 3000, icon: "textures/items/music_disc_precipice" },
+  { name: "Music Disc: Tears", id: "music_disc_tears", cost: 3000, icon: "textures/items/music_disc_tears" },
+  { name: "Music Disc: Lava Chicken", id: "music_disc_lava_chicken", cost: 3000, icon: "textures/items/music_disc_lava_chicken" },
+  { name: "Music Disc: Bounce", id: "music_disc_bounce", cost: 3000, icon: "textures/items/music_disc_bounce" },
 ]
 
 // ---- MobDrops ----
@@ -70,12 +88,22 @@ export const MobDropsType = [
   { name: "Ghast Tear", id: "ghast_tear", cost: 830, icon: "textures/items/ghast_tear" },
   { name: "Shulker Shell", id: "shulker_shell", cost: 340, icon: "textures/items/shulker_shell" },
   { name: "Blaze Rod", id: "blaze_rod", cost: 1100, icon: "textures/items/blaze_rod" },
-  { name: "Wither Skeleton Skull", id: "wither_skeleton_skull", cost: 100000, icon: "textures/blocks/soul_sand" },
+  { name: "Wither Skeleton Skull", id: "wither_skeleton_skull", cost: 100000, icon: "textures/items/spawn_eggs/spawn_egg_wither_skeleton" },
   { name: "Heart Of The Sea", id: "heart_of_the_sea", cost: 440, icon: "textures/items/heartofthesea_closed" },
   { name: "Nautilus Shell", id: "nautilus_shell", cost: 70, icon: "textures/items/nautilus" },
   { name: "Prismarine Crystals", id: "prismarine_crystals", cost: 830, icon: "textures/items/prismarine_crystals" },
   { name: "Prismarine Shard", id: "prismarine_shard", cost: 550, icon: "textures/items/prismarine_shard" },
   { name: "Totem", id: "totem_of_undying", cost: 3200, icon: "textures/items/totem" },
+  { name: "Armadillo Scute", id: "armadillo_scute", cost: 220, icon: "textures/items/armadillo_scute" },
+  { name: "Blue Egg", id: "blue_egg", cost: 20, icon: "textures/items/blue_egg" },
+  { name: "Brown Egg", id: "brown_egg", cost: 20, icon: "textures/items/brown_egg" },
+  { name: "Sniffer Egg", id: "sniffer_egg", cost: 20000, icon: "textures/items/sniffer_egg" },
+  { name: "Dried Ghast", id: "dried_ghast", cost: 8000, icon: "textures/blocks/dried_ghast_state_1_front" },
+  { name: "Zombie Head", id: "zombie_head", cost: 10000, icon: "textures/items/spawn_eggs/spawn_egg_zombie" },
+  { name: "Skeleton Skull", id: "skeleton_skull", cost: 10000, icon: "textures/items/spawn_eggs/spawn_egg_skeleton" },
+  { name: "Creeper Head", id: "creeper_head", cost: 20000, icon: "textures/items/spawn_eggs/spawn_egg_creeper" },
+  { name: "Piglin Head", id: "piglin_head", cost: 20000, icon: "textures/items/spawn_eggs/spawn_egg_piglin" },
+  { name: "Dragon Head", id: "dragon_head", cost: 150000, icon: "textures/items/spawn_eggs/spawn_egg_ender_dragon" },
 ]
 
 // ---- FoodsAndGrowables ----
@@ -114,6 +142,7 @@ export const FoodsAndGrowablesType = [
   { name: "Cocoa Seeds", id: "cocoa_beans", cost: 50, icon: "textures/items/dye_powder_brown" },
   { name: "Pointed Dripstone", id: "pointed_dripstone", cost: 10, icon: "textures/blocks/pointed_dripstone_down_tip" },
   { name: "Bone Meal", id: "bone_meal", cost: 10, icon: "textures/items/dye_powder_white" },
+  { name: "Shelf Mushroom", id: "shelf_mushroom", cost: 10, icon: "textures/blocks/shelf_mushroom_small" },
 ]
 
 // ---- Potions ----
@@ -131,6 +160,7 @@ export const PotionsType = [
   { name: "Weakness 8min", id: "potion", data: 35, cost: 110, icon: "textures/items/potion_bottle_weakness" },
   { name: "Slow Falling", id: "potion", data: 41, cost: 590, icon: "textures/items/potion_bottle_slowFall" },
   { name: "XP Bottle", id: "experience_bottle", cost: 100, icon: "textures/items/experience_bottle" },
+  { name: "Ominous Bottle (Bad Omen I)", id: "ominous_bottle", data: 0, cost: 2000, icon: "textures/items/ominous_bottle" },
 ]
 
 // ---- Books ----
@@ -177,6 +207,7 @@ export const BooksType = [
   { name: "Thorns III", enchant: "thorns", level: 3, cost: 900, icon: "textures/items/book_enchanted" },
   { name: "Unbreaking III", enchant: "unbreaking", level: 3, cost: 900, icon: "textures/items/book_enchanted" },
   { name: "Wind Burst III", enchant: "wind_burst", level: 3, cost: 900, icon: "textures/items/book_enchanted" },
+  { name: "Lunge III", enchant: "lunge", level: 3, cost: 900, icon: "textures/items/book_enchanted" },
 ]
 
 // ---- TreesAndGrass ----
@@ -223,6 +254,19 @@ export const TreesAndGrassType = [
   { name: "Moss Block", id: "moss_block", cost: 30, icon: "textures/blocks/moss_block" },
   { name: "Big Dripleaf", id: "big_dripleaf", cost: 60, icon: "textures/blocks/big_dripleaf_top" },
   { name: "Small Dripleaf", id: "small_dripleaf_block", cost: 60, icon: "textures/blocks/small_dripleaf_top" },
+  { name: "Poplar Log", id: "poplar_log", cost: 110, icon: "textures/blocks/poplar_log_side" },
+  { name: "Orange Poplar Leaves", id: "orange_poplar_leaves", cost: 20, icon: "textures/blocks/orange_poplar_leaves_opaque" },
+  { name: "Red Poplar Leaves", id: "red_poplar_leaves", cost: 20, icon: "textures/blocks/red_poplar_leaves_opaque" },
+  { name: "Yellow Poplar Leaves", id: "yellow_poplar_leaves", cost: 20, icon: "textures/blocks/yellow_poplar_leaves_opaque" },
+  { name: "Poplar Sapling", id: "poplar_sapling", cost: 20, icon: "textures/blocks/poplar_sapling" },
+  { name: "Pale Moss Block", id: "pale_moss_block", cost: 30, icon: "textures/blocks/pale_moss_block" },
+  { name: "Pale Hanging Moss", id: "pale_hanging_moss", cost: 10, icon: "textures/blocks/pale_hanging_moss_tip" },
+  { name: "Bush", id: "bush", cost: 10, icon: "textures/items/bush" },
+  { name: "Firefly Bush", id: "firefly_bush", cost: 60, icon: "textures/items/firefly_bush" },
+  { name: "Leaf Litter", id: "leaf_litter", cost: 10, icon: "textures/items/leaf_litter" },
+  { name: "Short Dry Grass", id: "short_dry_grass", cost: 2, icon: "textures/blocks/short_dry_grass" },
+  { name: "Tall Dry Grass", id: "tall_dry_grass", cost: 2, icon: "textures/blocks/tall_dry_grass" },
+  { name: "Red Shrub", id: "red_shrub", cost: 10, icon: "textures/blocks/red_shrub" },
 ]
 
 // ---- FlowersAndDyes ----
@@ -265,6 +309,10 @@ export const FlowersAndDyesType = [
   { name: "Purple Dye", id: "purple_dye", cost: 20, icon: "textures/items/dye_powder_purple" },
   { name: "Magenta Dye", id: "magenta_dye", cost: 10, icon: "textures/items/dye_powder_magenta" },
   { name: "Pink Dye", id: "pink_dye", cost: 10, icon: "textures/items/dye_powder_pink" },
+  { name: "Cactus Flower", id: "cactus_flower", cost: 30, icon: "textures/blocks/cactus_flower" },
+  { name: "Wildflowers", id: "wildflowers", cost: 20, icon: "textures/items/wildflowers" },
+  { name: "Open Eyeblossom", id: "open_eyeblossom", cost: 60, icon: "textures/blocks/eyeblossom_blooming" },
+  { name: "Closed Eyeblossom", id: "closed_eyeblossom", cost: 60, icon: "textures/blocks/eyeblossom_dormant" },
 ]
 
 // ---- Concrete ----
@@ -322,6 +370,9 @@ export const GeneralBlocksType = [
   { name: "Verdant Froglight", id: "verdant_froglight", cost: 590, icon: "textures/blocks/verdant_froglight_side" },
   { name: "Glass", id: "glass", cost: 20, icon: "textures/blocks/glass" },
   { name: "Ice", id: "ice", cost: 80, icon: "textures/blocks/ice" },
+  { name: "Sulfur", id: "sulfur", cost: 20, icon: "textures/blocks/sulfur" },
+  { name: "Cinnabar", id: "cinnabar", cost: 20, icon: "textures/blocks/cinnabar" },
+  { name: "Sulfur Spike", id: "sulfur_spike", cost: 10, icon: "textures/blocks/sulfur_spike_up_tip" },
 ]
 
 // Main menu layout. Remove or reorder entries here to change the shop.

@@ -1,4 +1,4 @@
-import { world, system, ItemStack, EnchantmentType } from '@minecraft/server'
+import { world, system, ItemStack, ItemTypes, EnchantmentType, EnchantmentTypes } from '@minecraft/server'
 import { ActionFormData, ModalFormData, FormCancelationReason } from '@minecraft/server-ui'
 import { sellPercent } from './percent.js'
 import { CATEGORIES } from './items.js'
@@ -246,9 +246,24 @@ function aboutMenu(player) {
     })
 }
 
+// Items added in newer Minecraft updates are hidden on game versions that don't have them
+const availability = new Map()
+function isAvailable(item) {
+  const key = item.enchant ?? item.id
+  if (!availability.has(key)) {
+    try {
+      availability.set(key, !!(item.enchant ? EnchantmentTypes.get(item.enchant) : ItemTypes.get(fullId(item.id))))
+    } catch {
+      availability.set(key, false)
+    }
+  }
+  return availability.get(key)
+}
+
 function categoryMenu(player, category) {
+  const items = category.items.filter(isAvailable)
   const form = new ActionFormData().title(header(player, category.title))
-  for (const item of category.items) {
+  for (const item of items) {
     const price = category.books
       ? `§cBuy: ${CURRENCY}${item.cost}`
       : `§cBuy: ${CURRENCY}${item.cost} §8| §aSell: ${CURRENCY}${sellPrice(item)}`
@@ -258,7 +273,7 @@ function categoryMenu(player, category) {
   form.show(player).then(result => {
     pageTurn(player)
     if (result.canceled) return mainMenu(player)
-    const item = category.items[result.selection]
+    const item = items[result.selection]
     if (!item) return
     if (category.books) bookMenu(player, category, item)
     else tradeMenu(player, category, item)

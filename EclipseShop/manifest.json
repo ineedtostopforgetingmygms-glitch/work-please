@@ -1,12 +1,12 @@
 {
   "format_version": 2,
   "header": {
-    "name": "§l§aEclipse Shøp §r§7[v2.0.0]",
+    "name": "§l§aEclipse Shøp §r§7[v2.1.0]",
     "description": "§l§aEclipse Shøp§r - buy & sell items with your money score.",
     "uuid": "cf9abfa9-7246-4326-b8e9-e8b96e1cc97e",
     "version": [
       2,
-      0,
+      1,
       0
     ],
     "min_engine_version": [

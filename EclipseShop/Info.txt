@@ -13,6 +13,23 @@ Setup:
 Changelog:
 ------------------------------------------------------
 
+2.1.0
+- Added items from recent Minecraft updates (1.21 to 26.50):
+  Ores & Rares: Breeze Rod, Heavy Core, Trial Key, Ominous Trial Key, Resin Clump
+  Utilities: Wind Charge, Sulfur Cube Bucket, Bolt & Flow Armor Trims,
+    Flow/Guster/Scrape Pottery Sherds, Music Discs (Creator, Creator Music Box,
+    Precipice, Tears, Lava Chicken, Bounce)
+  Mob Drops: Armadillo Scute, Blue Egg, Brown Egg, Sniffer Egg, Dried Ghast,
+    Zombie Head, Skeleton Skull, Creeper Head, Piglin Head, Dragon Head
+  Foods & Growables: Shelf Mushroom
+  Potions: Ominous Bottle
+  Enchanted Books: Lunge III
+  Trees & Grass: Poplar Log/Sapling, Orange/Red/Yellow Poplar Leaves, Pale Moss Block,
+    Pale Hanging Moss, Bush, Firefly Bush, Leaf Litter, Short/Tall Dry Grass, Red Shrub
+  Flowers & Dyes: Cactus Flower, Wildflowers, Open/Closed Eyeblossom
+  General Blocks: Sulfur, Cinnabar, Sulfur Spike
+- Items your Minecraft version doesn't have yet are hidden automatically
+
 2.0.0 (Eclipse)
 - Rebranded to Eclipse Shøp (new item coded:shop, new icon, new pack UUIDs)
 - Updated to Script API @minecraft/server 2.0.0 / @minecraft/server-ui 2.0.0
