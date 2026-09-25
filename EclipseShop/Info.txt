@@ -29,6 +29,7 @@ Changelog:
   Flowers & Dyes: Cactus Flower, Wildflowers, Open/Closed Eyeblossom
   General Blocks: Sulfur, Cinnabar, Sulfur Spike
 - Items your Minecraft version doesn't have yet are hidden automatically
+- New Eclipse Shøp pack icon
 
 2.0.0 (Eclipse)
 - Rebranded to Eclipse Shøp (new item coded:shop, new icon, new pack UUIDs)
