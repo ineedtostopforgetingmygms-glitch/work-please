@@ -56,10 +56,12 @@ def button(x, y, z, facing):
 def build_station(wall_z, side):
     """side=-1: plot A (plot is north of the wall), side=+1: plot B (plot is south)."""
     X = STATION_X
-    put(X, 27, wall_z, "minecraft:polished_blackstone_bricks")   # both buttons hang on this block
-    put(X, 28, wall_z, "minecraft:lime_concrete")                # lamp: lime = for sale, red = sold
-    button(X, 27, wall_z - side, SOUTH if side < 0 else NORTH)   # walkway side
-    button(X, 27, wall_z + side, SOUTH if side > 0 else NORTH)   # plot side
+    # Lamp on top of the wall (lime = for sale, red = sold) with a button on each side of it.
+    # The script only accepts stations with the border block 3 below the lamp and the walkway's
+    # deny block 3 below the walkway-side button, which players can't place themselves.
+    put(X, 28, wall_z, "minecraft:lime_concrete")
+    button(X, 28, wall_z - side, SOUTH if side < 0 else NORTH)   # walkway side
+    button(X, 28, wall_z + side, SOUTH if side > 0 else NORTH)   # plot side
     put(X, 0, wall_z + side, "minecraft:deny")                   # owner can't break the inside button
 
 

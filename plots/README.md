@@ -16,16 +16,17 @@ To change the price or currency, edit `PRICE` and `MONEY` at the top of `addon/P
 
 ## Buy stations
 
-Each plot has a polished blackstone bricks block in the middle of its walkway wall (x=13). It has a button on both sides and a lamp on top: lime means for sale, red means sold.
+Each plot has a lime/red concrete lamp in the middle of its walkway wall (x=13), with a button on both sides of it. Lime means for sale, red means sold.
 
-- **Walkway button, plot for sale:** buys the plot if the player has at least 10000 `c`. Otherwise it tells them their balance and takes nothing.
-- **Walkway button, plot sold:** the owner and added players are teleported in, any time. Everyone else is told who owns it.
-- **Plot button:** the owner gets the plot menu. Anyone else is teleported out to the walkway.
+- **Click, plot for sale:** shows a confirm screen, then buys the plot if the player has at least 10000 `c`. Otherwise it tells them their balance and takes nothing.
+- **Click, walkway side:** the owner and added players are teleported in, any time. Everyone else is told who owns it.
+- **Click, plot side:** teleports anyone out to the walkway.
+- **Shift + click (owner only), either side:** opens the plot menu. It has these options:
+  - **Add online player**
+  - **Remove player:** works for online and offline players.
+  - **Add or remove by username:** type an exact username, for players who are offline.
+  - **Combine with the plot to the east/west:** only shows when you own the plot next to this one on the same side of the walkway. It replaces the wall between the two plots with ground from top to bottom and shares added players across the combined plots. It can't be undone.
 
-The plot menu has these options:
-- **Leave plot**
-- **Add online player:** pick from a list of online players.
-- **Remove player:** pick from the plot's added players, online or offline.
-- **Add or remove by username:** type an exact username, for players who are offline.
+A station only works if there's a border block 3 below the lamp and the walkway's deny block 3 below the walkway-side button. Players can't get those blocks, so fake stations do nothing.
 
-Plot data is stored in world dynamic properties, keyed by the station's position: `{owner, members}`. There are no entities and no command blocks. Players can own any number of plots.
+Plot data is stored in world dynamic properties, keyed by the wall block under the lamp: `{owner, members, links}`. There are no entities and no command blocks. Players can own any number of plots.
