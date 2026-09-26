@@ -1,0 +1,19 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "iv:nav_5",
+      "menu_category": { "category": "none" }
+    },
+    "components": {
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": false,
+      "minecraft:geometry": "geometry.iv_empty",
+      "minecraft:material_instances": { "*": { "texture": "iv_empty", "render_method": "alpha_test" } },
+      "minecraft:light_dampening": 0,
+      "minecraft:replaceable": {},
+      "minecraft:loot": "loot_tables/empty.json",
+      "minecraft:destructible_by_explosion": false
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": { "identifier": "iv:woodcutter_bench" },
+    "tags": ["crafting_table"],
+    "pattern": ["LL", "LL"],
+    "key": {
+      "L": { "tag": "minecraft:logs" }
+    },
+    "unlock": [{ "tag": "minecraft:logs" }],
+    "result": { "item": "iv:woodcutter_bench" }
+  }
+}

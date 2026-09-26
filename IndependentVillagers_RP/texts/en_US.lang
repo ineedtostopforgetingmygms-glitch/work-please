@@ -1,0 +1,15 @@
+entity.iv:villager.name=Independent Villager
+item.spawn_egg.entity.iv:villager.name=Independent Villager Spawn Egg
+action.interact.iv_inspect=Inspect
+tile.iv:nav_0.name=Villager Path Marker
+tile.iv:nav_1.name=Villager Path Marker
+tile.iv:nav_2.name=Villager Path Marker
+tile.iv:nav_3.name=Villager Path Marker
+tile.iv:nav_4.name=Villager Path Marker
+tile.iv:nav_5.name=Villager Path Marker
+tile.iv:nav_6.name=Villager Path Marker
+tile.iv:nav_7.name=Villager Path Marker
+tile.iv:woodcutter_bench.name=Woodcutter's Bench
+entity.iv.lumberjack=Lumberjack
+entity.iv.miner=Miner
+entity.iv:inventory_view.name=Villager Inventory

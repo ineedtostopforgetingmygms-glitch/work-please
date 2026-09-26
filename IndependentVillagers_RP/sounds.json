@@ -1,0 +1,15 @@
+{
+  "entity_sounds": {
+    "entities": {
+      "iv:villager": {
+        "volume": 1.0,
+        "pitch": [0.8, 1.2],
+        "events": {
+          "ambient": "mob.villager.idle",
+          "hurt": "mob.villager.hit",
+          "death": "mob.villager.death"
+        }
+      }
+    }
+  }
+}

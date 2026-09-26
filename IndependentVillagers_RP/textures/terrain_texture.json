@@ -1,0 +1,13 @@
+{
+  "resource_pack_name": "independent_villagers",
+  "texture_name": "atlas.terrain",
+  "padding": 8,
+  "num_mip_levels": 4,
+  "texture_data": {
+    "iv_empty": { "textures": "textures/blocks/iv_empty" },
+    "iv_bench_side": { "textures": "textures/blocks/log_oak" },
+    "iv_bench_top": { "textures": "textures/blocks/log_oak_top" },
+    "iv_bench_handle": { "textures": "textures/blocks/planks_oak" },
+    "iv_bench_blade": { "textures": "textures/blocks/iron_block" }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "format_version": "1.21.60",
+  "minecraft:block": {
+    "description": {
+      "identifier": "iv:woodcutter_bench",
+      "menu_category": { "category": "items" }
+    },
+    "components": {
+      "minecraft:geometry": "geometry.iv_woodcutter_bench",
+      "minecraft:material_instances": {
+        "*": { "texture": "iv_bench_side", "render_method": "alpha_test", "ambient_occlusion": false, "face_dimming": true },
+        "up": { "texture": "iv_bench_top", "render_method": "alpha_test", "ambient_occlusion": false, "face_dimming": true },
+        "down": { "texture": "iv_bench_top", "render_method": "alpha_test", "ambient_occlusion": false, "face_dimming": true },
+        "handle": { "texture": "iv_bench_handle", "render_method": "alpha_test", "ambient_occlusion": false, "face_dimming": true },
+        "blade": { "texture": "iv_bench_blade", "render_method": "alpha_test", "ambient_occlusion": false, "face_dimming": true }
+      },
+      "minecraft:collision_box": { "origin": [-8, 0, -8], "size": [16, 16, 16] },
+      "minecraft:selection_box": { "origin": [-8, 0, -8], "size": [16, 16, 16] },
+      "minecraft:destructible_by_mining": { "seconds_to_destroy": 2 },
+      "minecraft:destructible_by_explosion": { "explosion_resistance": 3 },
+      "minecraft:flammable": { "catch_chance_modifier": 5, "destroy_chance_modifier": 20 },
+      "minecraft:map_color": "#7a5a36",
+      "minecraft:light_dampening": 0
+    }
+  }
+}

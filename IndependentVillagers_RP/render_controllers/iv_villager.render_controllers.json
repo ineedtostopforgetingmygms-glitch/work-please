@@ -1,0 +1,48 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.iv_villager.base": {
+      "geometry": "Geometry.default",
+      "materials": [{ "*": "Material.default" }],
+      "textures": ["Texture.base"],
+      "part_visibility": [
+        { "*": true },
+        { "brim": "query.property('iv:profession') == 3" },
+        { "arms": "!query.property('iv:working')" },
+        { "held_item": "!query.property('iv:working')" },
+        { "right_arm": "query.property('iv:working')" },
+        { "left_arm": "query.property('iv:working')" }
+      ]
+    },
+    "controller.render.iv_villager.masked": {
+      "arrays": {
+        "textures": {
+          "Array.biomes": [
+            "Texture.plains",
+            "Texture.desert",
+            "Texture.jungle",
+            "Texture.savanna",
+            "Texture.snow",
+            "Texture.swamp",
+            "Texture.taiga"
+          ],
+          "Array.professions": ["Texture.unskilled", "Texture.lumberjack", "Texture.miner", "Texture.farmer"]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [{ "*": "query.property('iv:profession') == 0 ? Material.default : Material.masked" }],
+      "textures": [
+        "Array.biomes[query.property('iv:biome')]",
+        "Array.professions[query.property('iv:profession')]"
+      ],
+      "part_visibility": [
+        { "*": true },
+        { "brim": "query.property('iv:profession') == 3" },
+        { "arms": "!query.property('iv:working')" },
+        { "held_item": "!query.property('iv:working')" },
+        { "right_arm": "query.property('iv:working')" },
+        { "left_arm": "query.property('iv:working')" }
+      ]
+    }
+  }
+}

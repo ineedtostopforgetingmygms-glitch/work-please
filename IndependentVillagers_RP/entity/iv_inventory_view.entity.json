@@ -1,0 +1,12 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "iv:inventory_view",
+      "materials": { "default": "entity_alphatest" },
+      "textures": { "default": "textures/entity/villager2/villager" },
+      "geometry": { "default": "geometry.iv_nothing" },
+      "render_controllers": ["controller.render.default"]
+    }
+  }
+}
