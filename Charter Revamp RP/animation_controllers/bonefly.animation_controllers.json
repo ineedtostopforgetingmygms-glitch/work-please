@@ -2,36 +2,37 @@
 	"format_version": "1.19.0",
 	"animation_controllers": {
 		"controller.animation.bonefly.walk_behavior": {
+			"initial_state": "default",
 			"states": {
 				"default": {
 					"animations": ["idleGround"],
 					"transitions": [
-						{"walking": "q.is_moving && q.is_on_ground"},
-						{"idleFly": "!q.is_on_ground"},
-						{"idleDormant": "q.is_on_ground && !q.is_moving && (q.is_sitting || q.has_property('bonefly:sit'))"}
+						{"idleFly": "q.property('bonefly:airborne')"},
+						{"walking": "q.is_moving"},
+						{"idleDormant": "q.is_sitting || q.property('bonefly:sit')"}
 					],
 					"blend_transition": 0.2
 				},
 				"idleFly": {
 					"animations": ["idleFly"],
 					"transitions": [
-						{"default": "q.is_on_ground"},
-						{"walking": "q.is_moving && q.is_on_ground"}
+						{"default": "!q.property('bonefly:airborne')"}
 					],
 					"blend_transition": 0.2
 				},
 				"walking": {
 					"animations": ["walkGround"],
 					"transitions": [
-						{"default": "q.is_on_ground && !q.is_moving"},
-						{"idleFly": "!q.is_on_ground || !q.has_gravity"}
+						{"idleFly": "q.property('bonefly:airborne')"},
+						{"default": "!q.is_moving"}
 					],
 					"blend_transition": 0.2
 				},
 				"idleDormant": {
 					"animations": ["idleDormant"],
 					"transitions": [
-						{"default": "!q.is_sitting && !q.has_property('bonefly:sit')"}
+						{"idleFly": "q.property('bonefly:airborne')"},
+						{"default": "!q.is_sitting && !q.property('bonefly:sit')"}
 					],
 					"blend_transition": 0.2
 				}
@@ -40,7 +41,7 @@
 		"controller.animation.bonefly.behavior": {
 			"states": {
 				"default": {
-					"animations": [""],
+					"animations": [],
 					"transitions": [
 						{"attack": "v.attack_time"},
 						{"hurt": "q.hurt_time > 0.1"}

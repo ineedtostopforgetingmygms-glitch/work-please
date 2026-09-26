@@ -9,7 +9,13 @@
             "properties": {
                 "bonefly:sit": {
                     "type": "bool",
-                    "client_sync": false,
+                    "client_sync": true,
+                    "default": false
+                },
+                // set by scripts/Charter/entities/bonefly/bonefly.js, drives the fly/ground animations
+                "bonefly:airborne": {
+                    "type": "bool",
+                    "client_sync": true,
                     "default": false
                 },
                 "bonefly:fly": {
