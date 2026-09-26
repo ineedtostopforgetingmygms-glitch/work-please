@@ -50,6 +50,7 @@ import { restockSellRow } from "../trade.js";
 import { market } from "./market.js";
 import { hideState, offDuty, sleepState } from "./rest.js";
 import { goShopping, shop } from "./shopping.js";
+import { shopForTool } from "./tools.js";
 import { spareOf } from "../economy.js";
 
 export const WORKSTATION = "iv:woodcutter_bench";
@@ -865,7 +866,10 @@ function idle(villager, dim, brain, now, ws) {
   setWorking(villager, false);
   const inv = getInventory(villager);
   pickup(villager, dim, inv);
-  if (brain.idleInfo?.since !== brain.since) brain.idleInfo = { since: brain.since, walked: false, planted: false };
+  if (brain.idleInfo?.since !== brain.since) {
+    brain.idleInfo = { since: brain.since, walked: false, planted: false };
+    if (shopForTool(villager, dim, brain, "axe", "idle", now)) return; // doing well: a better axe off the armorer
+  }
   const info = brain.idleInfo;
 
   if (brain.nav) {

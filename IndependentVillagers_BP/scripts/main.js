@@ -15,6 +15,8 @@ import { unemployedThink } from "./jobs/unemployed.js";
 import { lumberjackThink } from "./jobs/lumberjack.js";
 import { minerThink } from "./jobs/miner.js";
 import { farmerThink } from "./jobs/farmer.js";
+import { cartographerThink } from "./jobs/cartographer.js";
+import { armorerThink } from "./jobs/armorer.js";
 import { getWorkstation } from "./jobs/employment.js";
 import { isCreative } from "./inspect.js";
 import { isBeingInspected, viewSelfTest } from "./inventory_view.js";
@@ -33,6 +35,8 @@ const THINKERS = {
   [Profession.LUMBERJACK]: lumberjackThink,
   [Profession.MINER]: minerThink,
   [Profession.FARMER]: farmerThink,
+  [Profession.CARTOGRAPHER]: cartographerThink,
+  [Profession.ARMORER]: armorerThink,
 };
 
 system.runInterval(() => {
@@ -209,7 +213,7 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
       }
     }
   } else if (ev.id === "iv:spawnjack") {
-    // /scriptevent iv:spawnjack <x> <z>  - crafting table + villager on the ground at x z (for testing)
+    // /scriptevent iv:spawnjack <x> <z> [miner|farmer|cartographer|armorer]  - job block + villager on the ground at x z (for testing)
     const [x0, z0] = args.map(Number);
     const dim = world.getDimension("minecraft:overworld");
     // open ground, not under a tree (a villager placed inside a trunk suffocates)
@@ -238,7 +242,7 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
     }
     if (!b) return say("[IV] spawnjack: no clear ground found (chunk loaded?)");
     const table = { x, y: b.y + 1, z };
-    const job = { miner: "minecraft:stonecutter_block", farmer: "minecraft:composter" }[args[2]] ?? "iv:woodcutter_bench";
+    const job = { miner: "minecraft:stonecutter_block", farmer: "minecraft:composter", cartographer: "minecraft:cartography_table", armorer: "minecraft:blast_furnace" }[args[2]] ?? "iv:woodcutter_bench";
     dim.getBlock(table).setType(job);
     dim.spawnEntity(VILLAGER_ID, { x: x + 1.5, y: b.y + 1, z: z + 0.5 });
     say(`[IV] spawnjack: table at ${table.x} ${table.y} ${table.z} (ground ${b.typeId})`);

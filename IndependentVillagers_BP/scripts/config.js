@@ -37,6 +37,8 @@ export const Profession = Object.freeze({
   LUMBERJACK: 1,
   MINER: 2,
   FARMER: 3,
+  CARTOGRAPHER: 4,
+  ARMORER: 5,
 });
 
 // Add new professions here. `workstation` lists the block(s) an unemployed villager claims to get the job.
@@ -56,6 +58,16 @@ export const PROFESSION_INFO = {
     name: "Farmer",
     nameTag: "Farmer",
     workstation: ["minecraft:composter"],
+  },
+  [Profession.CARTOGRAPHER]: {
+    name: "Cartographer",
+    nameTag: "Cartographer",
+    workstation: ["minecraft:cartography_table"],
+  },
+  [Profession.ARMORER]: {
+    name: "Armorer",
+    nameTag: "Armorer",
+    workstation: ["minecraft:blast_furnace", "minecraft:lit_blast_furnace"],
   },
 };
 
@@ -172,6 +184,84 @@ export const FARM = {
   SEEDS_WANTED: 8,
   GRASS_SEARCH: 20, // he beats seeds out of tall grass this far away
   TEND_TIME: 20 * 60,
+};
+
+// ---------------------------------------------------------------- cartographer
+export const CARTO = {
+  WILD_RADIUS: 32, // wild sugar cane he'll go and cut to get started
+  START_CANE: 6, // ...this much of it (or bought off a wandering trader) is enough to start a patch
+  TRADER_RADIUS: 96, // how far he'll walk to a wandering trader
+  TRADER_CANE: 4, // what he buys off one...
+  TRADER_PRICE: 1, // ...at this many emeralds a piece (vanilla's price)
+  WATER_RADIUS: 100, // how far from his cartography table he'll look for a shore to plant on
+  SCAN_PER_THINK: 400, // columns of that search per think
+  PATCH_RADIUS: 8, // shore within this of the first spot he found is all one sugar cane patch
+  PATCH_SPOTS: 24, // the most cane he plants
+  POND_RADIUS: 10, // no shore anywhere: he digs his own pond this close to his table
+  BUCKET_IRON: 3,
+  WATER_SEARCH: 100, // how far he'll walk to fill his bucket (a village well, a farm's channel)
+  KEEP_CANE: 4, // cane he keeps back for replanting rather than pulping into paper
+  PAPER_PER_MAP: 9, // Bedrock: 9 paper -> 1 empty map
+  MAPS_WANTED: 16, // maps (in his chest + pockets) before he stops making more
+  PAPER_WANTED: 48, // paper he keeps in stock as well
+  COMPASS_EVERY: 20 * 60 * 15, // every so often he makes a compass (4 iron + 1 redstone)...
+  COMPASS_WANTED: 4, // ...unless he already has this many in stock
+  COMPASS_IRON: 4,
+  TAX_EVERY: 20 * 60 * 60, // and every hour of play or so he goes round the village collecting taxes
+  TAX_RADIUS: 64, // everyone this close to his table pays
+  TAX_FLOOR: 16, // nobody is taxed below this many emeralds
+  // share of a villager's emeralds he takes: the richer, the bigger the cut
+  TAX_BANDS: [
+    { from: 128, rate: 0.15 },
+    { from: 64, rate: 0.1 },
+    { from: 16, rate: 0.05 },
+  ],
+  TAX_TIMEOUT: 20 * 60 * 3, // gives up on the round after this long
+  TEND_TIME: 20 * 60,
+  RETURN_AT: 64,
+};
+
+// ---------------------------------------------------------------- armorer
+export const ARMOR = {
+  ORE_BUY: 6, // raw iron he buys off a miner at a time
+  GOLD_BUY: 4, // ...and raw gold
+  DIAMOND_BUY: 3, // diamonds, when a miner has some spare and he can afford them
+  DIAMOND_RICH: 80, // he only buys diamonds with at least this many emeralds on him
+  COAL_BUY: 4,
+  MINER_COAL_KEEP: 4, // a miner holds back this much coal for his torches and won't sell it
+  CHARCOAL_LOGS: 4, // no coal to be had: logs he burns into charcoal (in an ordinary furnace)
+  FURNACE_COBBLE: 8,
+  KEEP_INGOTS: 4, // iron he keeps back to sell (the cartographer's compasses, the blacksmith...)
+  // tools he keeps in stock (chest + pockets); he makes the ones the village is shortest of first
+  STOCK: {
+    "minecraft:iron_pickaxe": 2,
+    "minecraft:iron_axe": 2,
+    "minecraft:iron_hoe": 2,
+    "minecraft:iron_sword": 1,
+    "minecraft:diamond_pickaxe": 1,
+    "minecraft:diamond_axe": 1,
+    "minecraft:diamond_hoe": 1,
+  },
+  RETURN_AT: 32,
+};
+
+// Recipes: material count + sticks
+export const TOOL_RECIPES = {
+  "minecraft:iron_pickaxe": { mat: "minecraft:iron_ingot", n: 3, sticks: 2 },
+  "minecraft:iron_axe": { mat: "minecraft:iron_ingot", n: 3, sticks: 2 },
+  "minecraft:iron_hoe": { mat: "minecraft:iron_ingot", n: 2, sticks: 2 },
+  "minecraft:iron_sword": { mat: "minecraft:iron_ingot", n: 2, sticks: 1 },
+  "minecraft:diamond_pickaxe": { mat: "minecraft:diamond", n: 3, sticks: 2 },
+  "minecraft:diamond_axe": { mat: "minecraft:diamond", n: 3, sticks: 2 },
+  "minecraft:diamond_hoe": { mat: "minecraft:diamond", n: 2, sticks: 2 },
+};
+
+// Buying tools off the armorer: only a villager who can afford it AND is doing well for himself
+// (this many emeralds left over after paying) swaps his own tool for a better one.
+export const TOOLS = {
+  RICH: 64, // iron
+  RICH_DIAMOND: 128, // diamond
+  RETRY: 20 * 60 * 2, // after asking, don't ask again for this long
 };
 
 // ---------------------------------------------------------------- blocks & items

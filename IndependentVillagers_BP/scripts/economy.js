@@ -1,6 +1,6 @@
 // Money between villagers: everyone starts with emeralds, and villagers pay each other for goods.
 import { ItemStack } from "@minecraft/server";
-import { AXES, CFG, LOGS, PICKAXES } from "./config.js";
+import { ARMOR, AXES, CFG, HOES, LOGS, PICKAXES, pickLevel, PROP_PROFESSION, Profession, TOOL_RECIPES } from "./config.js";
 import { debugLog } from "./debug.js";
 import { GEN_END, vAdd, vCount, vTake } from "./inventory.js";
 import { getInventory, lookAt, particle, playSound } from "./util.js";
@@ -32,21 +32,61 @@ export function emeralds(villager) {
 
 /**
  * Things villagers buy from each other. `match` says which items count (any wood type for logs).
- * `keep` is how many the seller holds back for his own work.
+ * `keep` is how many the seller holds back for his own work - a number, or a function of the seller
+ * (a miner won't sell the coal he needs for his torches). `unit` fixes the price of one when it isn't
+ * on anybody's trade table.
  */
+const isMiner = (v) => v.getProperty(PROP_PROFESSION) === Profession.MINER;
+// a miner still saving up for his iron pickaxe won't part with the three raw iron he's put by
+const minerIronKeep = (v) => (isMiner(v) && pickLevel(bestPickId(v)) < 3 ? 3 : 0);
+
 export const GOODS = {
   logs: { label: "logs", match: (id) => LOGS.has(id), keep: 0 },
-  coal: { label: "coal", match: (id) => id === "minecraft:coal" || id === "minecraft:charcoal", keep: 0 },
+  coal: { label: "coal", match: (id) => id === "minecraft:coal" || id === "minecraft:charcoal", keep: (v) => (isMiner(v) ? ARMOR.MINER_COAL_KEEP : 0) },
   cobblestone: { label: "cobblestone", match: (id) => id === "minecraft:cobblestone", keep: 16 },
-  iron: { label: "iron", match: (id) => id === "minecraft:raw_iron" || id === "minecraft:iron_ingot", keep: 0 },
+  iron: { label: "iron", match: (id) => id === "minecraft:raw_iron" || id === "minecraft:iron_ingot", keep: minerIronKeep },
+  raw_iron: { label: "raw iron", match: (id) => id === "minecraft:raw_iron", keep: minerIronKeep },
+  raw_gold: { label: "raw gold", match: (id) => id === "minecraft:raw_gold", keep: 0 },
+  // TODO(blacksmith): once the blacksmith exists, iron ingots should come from him - for now the
+  // armorer is the one smelting them
+  iron_ingot: { label: "iron ingots", match: (id) => id === "minecraft:iron_ingot", keep: (v) => (isMiner(v) ? minerIronKeep(v) : 0) },
+  redstone: { label: "redstone", match: (id) => id === "minecraft:redstone", keep: 0 },
+  diamond: { label: "diamonds", match: (id) => id === "minecraft:diamond", keep: 0, unit: 4 },
+  sugar_cane: { label: "sugar cane", match: (id) => id === "minecraft:sugar_cane", keep: 8 },
   seeds: { label: "seeds", match: (id) => id === "minecraft:wheat_seeds" || id === "minecraft:beetroot_seeds", keep: 8 },
 };
+// every tool the armorer makes is a good of its own ("iron_axe", "diamond_pickaxe"...)
+for (const tool of Object.keys(TOOL_RECIPES)) {
+  const key = tool.replace("minecraft:", "");
+  GOODS[key] = { label: key.replace("_", " "), match: (id) => id === tool, keep: 0 };
+}
 
-const NEVER_SOLD = (id) => id === EMERALD || !!AXES[id] || !!PICKAXES[id];
+const isTool = (id) => !!AXES[id] || !!PICKAXES[id] || !!HOES[id] || id.endsWith("_sword");
+/** Never for sale: his emeralds, and the tools he works with (unless selling tools IS his work). */
+function neverSold(seller, id) {
+  if (id === EMERALD) return true;
+  return isTool(id) && seller.getProperty(PROP_PROFESSION) !== Profession.ARMORER;
+}
+
+function bestPickId(v) {
+  const inv = getInventory(v);
+  let best = "";
+  for (let i = 0; i < GEN_END; i++) {
+    const id = inv.getItem(i)?.typeId;
+    if (id && PICKAXES[id] && pickLevel(id) > pickLevel(best)) best = id;
+  }
+  return best;
+}
+
+function keepOf(seller, good) {
+  const k = GOODS[good].keep;
+  return typeof k === "function" ? k(seller) : k;
+}
 
 /** What a villager pays another for `count` of a good: the deal price for wood, else the shop price. */
 export function priceFor(good, count) {
   if (good === "logs") return Math.ceil((count * CFG.WOOD_DEAL.price) / CFG.WOOD_DEAL.logs);
+  if (GOODS[good]?.unit) return GOODS[good].unit * count;
   for (const p of Object.values(TRADES.professions)) {
     const s = p.sells.find((s) => GOODS[good]?.match(s.item));
     if (s) return Math.max(1, Math.ceil((count / s.per) * s.price));
@@ -67,8 +107,8 @@ function countSlots(inv, from, to, pred) {
 export function spareOf(villager, good) {
   const g = GOODS[good];
   const inv = getInventory(villager);
-  const pred = (id) => g.match(id) && !NEVER_SOLD(id);
-  return Math.max(0, countSlots(inv, 0, inv.size, pred) - g.keep);
+  const pred = (id) => g.match(id) && !neverSold(villager, id);
+  return Math.max(0, countSlots(inv, 0, inv.size, pred) - keepOf(villager, good));
 }
 
 /** How many of a good he has on him (shop row included). */

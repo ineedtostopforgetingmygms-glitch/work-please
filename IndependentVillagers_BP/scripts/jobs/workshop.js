@@ -46,6 +46,11 @@ export function benchNear(dim, pos, radius = CFG.WORK.BENCH_RADIUS) {
   return found;
 }
 
+/** Somebody just put a crafting table down: every remembered "no table around here" is out of date. */
+export function forgetBenches() {
+  benchCache.clear();
+}
+
 /**
  * Room for a block he wants to put down near `anchor` - not just within arm's reach, so he can
  * make space in a tight village house by walking round the back of it.
@@ -132,6 +137,7 @@ export function useBench(villager, dim, brain, now, ws, takeOneLog) {
   }
   if (!takeOneLog()) return undefined;
   if (!placeBlock(villager, dim, spot, TABLE, "use.wood")) return undefined;
+  forgetBenches();
   playSound(dim, "dig.wood", center(spot), 1.4);
   debugLog(villager, `made a crafting table and put it at ${spot.x} ${spot.y} ${spot.z}`);
   return "busy";

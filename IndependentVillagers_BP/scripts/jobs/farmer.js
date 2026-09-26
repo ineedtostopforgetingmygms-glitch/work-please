@@ -28,6 +28,7 @@ import { haveBench, putDown, useBench } from "./workshop.js";
 import { claimField, claimedByOther, clusterFields, inField, myField } from "./fields.js";
 import { fetchWood, woodState } from "./wood.js";
 import { goShopping, shop } from "./shopping.js";
+import { shopForTool } from "./tools.js";
 import { market } from "./market.js";
 import { hideState, offDuty, sleepState } from "./rest.js";
 import { furnaceHas, furnaceNear, pickStack, plankFuel, smeltStep } from "./smelting.js";
@@ -807,6 +808,7 @@ function idle(villager, dim, brain, now, ws) {
   }
   if (brain.idleInfo?.since !== brain.since) {
     brain.idleInfo = { since: brain.since };
+    if (shopForTool(villager, dim, brain, "hoe", "idle", now)) return; // doing well: a better hoe off the armorer
     if (!isNearHome(villager, ws)) {
       const spot = spotNextTo(dim, ws, villager);
       if (spot && navTo(villager, brain, spot, { radius: 0.9 })) return sleep(brain, 4);

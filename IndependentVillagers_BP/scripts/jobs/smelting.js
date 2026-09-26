@@ -1,6 +1,6 @@
 // Using a furnace like a player: put the goods in the top slot, fuel underneath, wait for it to
-// burn (10 seconds an item) and take the result out. Shared by the miner (logs -> charcoal) and
-// the farmer (raw iron -> iron ingots).
+// burn (10 seconds an item) and take the result out. Shared by the miner (logs -> charcoal), the
+// farmer (raw iron -> iron ingots) and the armorer (ores in his blast furnace, charcoal in a furnace).
 import { ItemStack } from "@minecraft/server";
 import { CFG, LOGS } from "../config.js";
 import { debugLog } from "../debug.js";
@@ -8,12 +8,13 @@ import { GEN_END, vAdd, vTake } from "../inventory.js";
 import { canUse, center, getBlock, lookAt, offset, particle, playSound } from "../util.js";
 
 export const FURNACES = ["minecraft:furnace", "minecraft:lit_furnace"];
+export const BLAST_FURNACES = ["minecraft:blast_furnace", "minecraft:lit_blast_furnace"];
 
 /**
  * A furnace near a job block, if there is one - as far out as a villager will walk to put one down
  * (see workshop.js), so he never builds a second one he can't find.
  */
-export function furnaceNear(dim, ws, radius = CFG.WORK.PLACE_RADIUS) {
+export function furnaceNear(dim, ws, radius = CFG.WORK.PLACE_RADIUS, kinds = FURNACES) {
   let best;
   let bestD = Infinity;
   for (let dy = -2; dy <= 2; dy++)
@@ -22,7 +23,7 @@ export function furnaceNear(dim, ws, radius = CFG.WORK.PLACE_RADIUS) {
         const d = dx * dx + dz * dz + dy * dy * 4;
         if (d >= bestD) continue;
         const p = offset(ws, dx, dy, dz);
-        if (!FURNACES.includes(getBlock(dim, p)?.typeId)) continue;
+        if (!kinds.includes(getBlock(dim, p)?.typeId)) continue;
         best = p;
         bestD = d;
       }
@@ -50,11 +51,12 @@ export function plankFuel(inv) {
 
 /**
  * One think's worth of smelting. `job` is the villager's brain.job (kept between thinks).
+ * `cfg.furnaces` picks the kind of furnace (a blast furnace smelts ores twice as fast - `cfg.ticksPer`).
  * @returns {"working"|"done"|"nofurnace"|"toofar"|"busy"|"nothing"}
  */
 export function smeltStep(villager, dim, brain, now, ws, cfg) {
   const inv = villager.getComponent("minecraft:inventory").container;
-  const fpos = furnaceNear(dim, ws);
+  const fpos = furnaceNear(dim, ws, undefined, cfg.furnaces ?? FURNACES);
   if (!fpos) return "nofurnace";
   if (!canUse(dim, villager, fpos, CFG.REACH + 1)) return "toofar"; // he has to walk round to it
   const fc = center(fpos);
@@ -71,7 +73,7 @@ export function smeltStep(villager, dim, brain, now, ws, cfg) {
       cfg.takeFuel(inv);
       job.n = pick.count;
       job.loaded = true;
-      job.done = now + 200 * Math.max(1, job.n);
+      job.done = now + (cfg.ticksPer ?? 200) * Math.max(1, job.n);
       debugLog(villager, `smelting ${job.n} ${pick.type.replace("minecraft:", "")}`);
     }
     if (now % 20 === 0) particle(dim, "minecraft:basic_flame_particle", offset(fc, 0, 0.3, 0));
@@ -87,7 +89,11 @@ export function smeltStep(villager, dim, brain, now, ws, cfg) {
     if (input && !cfg.isInput(input.typeId)) return "busy";
     if (!input) {
       const pick = cfg.pickInput(inv);
-      if (!pick?.count) return "nothing";
+      // nothing to put in - but there may still be a batch waiting in the output slot to take out
+      if (!pick?.count) {
+        if (furnace.getItem(2)?.typeId !== cfg.product) return "nothing";
+        return "working";
+      }
       vTake(inv, (id) => id === pick.type, pick.count);
       furnace.setItem(0, new ItemStack(pick.type, pick.count));
       job.n = pick.count;

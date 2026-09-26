@@ -19,7 +19,9 @@
         "unskilled": "textures/entity/villager2/professions/unskilled",
         "lumberjack": "textures/entity/villager2/professions/leatherworker",
         "miner": "textures/entity/villager2/professions/stonemason",
-        "farmer": "textures/entity/villager2/professions/farmer"
+        "farmer": "textures/entity/villager2/professions/farmer",
+        "cartographer": "textures/entity/villager2/professions/cartographer",
+        "armorer": "textures/entity/villager2/professions/armorer"
       },
       "geometry": {
         "default": "geometry.iv_villager"

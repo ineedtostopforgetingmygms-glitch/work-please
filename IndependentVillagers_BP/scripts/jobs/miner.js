@@ -28,6 +28,7 @@ import { isNearHome, spotNextTo, stockpileChests, walkTo } from "./common.js";
 import { haveBench, putDown, useBench } from "./workshop.js";
 import { fetchWood, woodState } from "./wood.js";
 import { goShopping, shop } from "./shopping.js";
+import { shopForTool } from "./tools.js";
 import { market } from "./market.js";
 import { hideState, offDuty, sleepState } from "./rest.js";
 import { claimSegment, createMine, findMine, finishSegment, mineOf, newBranch, saveMines, sliceCenter } from "./mines.js";
@@ -832,7 +833,7 @@ function stash(villager, dim, brain, now, ws) {
   const chests = stockpileChests(dim, ws, "stone");
 
   // keep: tools, emeralds, some logs/sticks, torches, a little coal for torches, 16 cobblestone
-  // for bridging
+  // for bridging - and his diamonds and redstone, which the armorer and cartographer buy off him
   const cobble = vCount(inv, (id) => id === COBBLE);
   const coal = vCount(inv, isFuel);
   const iron = vCount(inv, (id) => id === IRON_RAW || id === IRON);
@@ -843,6 +844,8 @@ function stash(villager, dim, brain, now, ws) {
     !isLog(id) &&
     !isStick(id) &&
     !isTorch(id) &&
+    id !== "minecraft:diamond" &&
+    id !== "minecraft:redstone" &&
     !(isFuel(id) && coal <= 8) &&
     !(id === COBBLE && cobble <= 16) &&
     !(wantsIron && (id === IRON_RAW || id === IRON) && iron <= 3); // saving up for an iron pickaxe
@@ -907,6 +910,7 @@ function idle(villager, dim, brain, now, ws) {
   }
   if (brain.idleInfo?.since !== brain.since) {
     brain.idleInfo = { since: brain.since };
+    if (shopForTool(villager, dim, brain, "pickaxe", "idle", now)) return; // doing well: a better pickaxe off the armorer
     if (!isNearHome(villager, ws)) {
       const spot = spotNextTo(dim, ws, villager);
       if (spot && navTo(villager, brain, spot, { radius: 0.9 })) return sleep(brain, 4);

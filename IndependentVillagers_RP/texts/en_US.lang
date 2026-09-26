@@ -12,4 +12,7 @@ tile.iv:nav_7.name=Villager Path Marker
 tile.iv:woodcutter_bench.name=Woodcutter's Bench
 entity.iv.lumberjack=Lumberjack
 entity.iv.miner=Miner
+entity.iv.farmer=Farmer
+entity.iv.cartographer=Cartographer
+entity.iv.armorer=Armorer
 entity.iv:inventory_view.name=Villager Inventory

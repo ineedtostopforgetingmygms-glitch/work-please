@@ -7,7 +7,7 @@ import { debugLog } from "./debug.js";
 const brains = new Map();
 
 export const STATE_LABELS = {
-  jobless: "Looking for a job (place a Woodcutter's Bench or a Stonecutter nearby!)",
+  jobless: "Looking for a job (place a Woodcutter's Bench, Stonecutter, Composter, Cartography Table or Blast Furnace nearby!)",
   bench: "Setting up his own woodcutter's bench",
   wood: "Cutting his own wood",
   supply: "Getting ready for work",
@@ -33,6 +33,13 @@ export const STATE_LABELS = {
   idle: "Taking a break",
   sleep: "Off to bed",
   hide: "Getting indoors (the bell!)",
+  plan: "Working out what to do next",
+  shore: "Looking for water to grow sugar cane by",
+  wild: "Cutting wild sugar cane",
+  trader: "Buying from the wandering trader",
+  pond: "Making a pond for his sugar cane",
+  tax: "Collecting taxes",
+  char: "Burning charcoal",
 };
 
 /** What to show a player: a villager who hasn't earned a break yet is only pausing, not resting. */

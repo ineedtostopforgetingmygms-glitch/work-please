@@ -94,7 +94,7 @@ function end(playerId) {
 function statusLine(villager) {
   const prof = villager.getProperty(PROP_PROFESSION) ?? Profession.NONE;
   const state = stateLabel(peekBrain(villager.id));
-  const tools = [getTool(villager, "axe")?.id, getTool(villager, "pickaxe")?.id].filter(Boolean).map(prettyName);
+  const tools = [getTool(villager, "axe")?.id, getTool(villager, "pickaxe")?.id, getTool(villager, "hoe")?.id].filter(Boolean).map(prettyName);
   return `§6${villager.nameTag || PROFESSION_INFO[prof]?.name}§r - ${state ?? "resting"} §7| tools: ${tools.join(", ") || "none"} | bottom row = shop stock`;
 }
 

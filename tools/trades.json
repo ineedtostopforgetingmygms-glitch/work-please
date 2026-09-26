@@ -1,0 +1,226 @@
+{
+  "maxOffers": 3,
+  "tiers": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    8,
+    12,
+    16
+  ],
+  "normalTier": 8,
+  "professions": {
+    "lumberjack": {
+      "code": "L",
+      "profession": 1,
+      "displayName": "entity.iv.lumberjack",
+      "sells": [
+        {
+          "item": "minecraft:oak_log",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:spruce_log",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:birch_log",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:jungle_log",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:acacia_log",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:dark_oak_log",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:mangrove_log",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:cherry_log",
+          "per": 6,
+          "price": 1
+        },
+        {
+          "item": "minecraft:pale_oak_log",
+          "per": 6,
+          "price": 1
+        },
+        {
+          "item": "minecraft:poplar_log",
+          "per": 8,
+          "price": 1
+        }
+      ]
+    },
+    "miner": {
+      "code": "M",
+      "profession": 2,
+      "displayName": "entity.iv.miner",
+      "sells": [
+        {
+          "item": "minecraft:cobblestone",
+          "per": 16,
+          "price": 1
+        },
+        {
+          "item": "minecraft:cobbled_deepslate",
+          "per": 16,
+          "price": 1
+        },
+        {
+          "item": "minecraft:coal",
+          "per": 8,
+          "price": 1
+        },
+        {
+          "item": "minecraft:raw_copper",
+          "per": 6,
+          "price": 1
+        },
+        {
+          "item": "minecraft:raw_iron",
+          "per": 3,
+          "price": 1
+        },
+        {
+          "item": "minecraft:raw_gold",
+          "per": 2,
+          "price": 1
+        }
+      ]
+    },
+    "farmer": {
+      "code": "F",
+      "profession": 3,
+      "displayName": "entity.iv.farmer",
+      "sells": [
+        {
+          "item": "minecraft:wheat",
+          "per": 16,
+          "price": 1
+        },
+        {
+          "item": "minecraft:carrot",
+          "per": 16,
+          "price": 1
+        },
+        {
+          "item": "minecraft:potato",
+          "per": 16,
+          "price": 1
+        },
+        {
+          "item": "minecraft:beetroot",
+          "per": 12,
+          "price": 1
+        },
+        {
+          "item": "minecraft:bread",
+          "per": 5,
+          "price": 1
+        },
+        {
+          "item": "minecraft:wheat_seeds",
+          "per": 24,
+          "price": 1
+        }
+      ]
+    },
+    "cartographer": {
+      "code": "C",
+      "profession": 4,
+      "displayName": "entity.iv.cartographer",
+      "sells": [
+        {
+          "item": "minecraft:paper",
+          "per": 12,
+          "price": 1
+        },
+        {
+          "item": "minecraft:empty_map",
+          "per": 1,
+          "price": 3
+        },
+        {
+          "item": "minecraft:compass",
+          "per": 1,
+          "price": 4
+        },
+        {
+          "item": "minecraft:sugar_cane",
+          "per": 16,
+          "price": 1
+        }
+      ]
+    },
+    "armorer": {
+      "code": "A",
+      "profession": 5,
+      "displayName": "entity.iv.armorer",
+      "sells": [
+        {
+          "item": "minecraft:iron_ingot",
+          "per": 2,
+          "price": 1
+        },
+        {
+          "item": "minecraft:gold_ingot",
+          "per": 1,
+          "price": 1
+        },
+        {
+          "item": "minecraft:iron_axe",
+          "per": 1,
+          "price": 4
+        },
+        {
+          "item": "minecraft:iron_pickaxe",
+          "per": 1,
+          "price": 4
+        },
+        {
+          "item": "minecraft:iron_hoe",
+          "per": 1,
+          "price": 3
+        },
+        {
+          "item": "minecraft:iron_sword",
+          "per": 1,
+          "price": 3
+        },
+        {
+          "item": "minecraft:diamond_axe",
+          "per": 1,
+          "price": 12
+        },
+        {
+          "item": "minecraft:diamond_pickaxe",
+          "per": 1,
+          "price": 12
+        },
+        {
+          "item": "minecraft:diamond_hoe",
+          "per": 1,
+          "price": 9
+        }
+      ]
+    }
+  }
+}
