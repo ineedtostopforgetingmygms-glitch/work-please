@@ -99,7 +99,7 @@ def build_station(label, wall_z, side):
     X = STATION_X
     host = (X, 27, wall_z)             # full block that both buttons hang on
     lamp = (X, 28, wall_z)             # lime = for sale, red = sold
-    marker = (X, 21, wall_z + 2 * walk)  # hidden armor stand under the walkway, holds the plot id
+    marker = (X, 21, wall_z + 2 * walk)  # hidden armor stand under the walkway, holds the owner's pid
     inside_spot = (X, 27, wall_z + 3 * side)
     outside_spot = (X, 27, wall_z + 2 * walk)
     inside_box_lo = (X - 2, 27, min(wall_z + side, wall_z + 3 * side))
@@ -116,40 +116,47 @@ def build_station(label, wall_z, side):
     def M(at, extra=""):
         return f"@e[type=armor_stand,name=plotmark,{sel_pos(at, marker)},r=1{extra}]"
 
+    def near(at, r=6):
+        # every player selector is limited to this station, so each plot only scans itself
+        return f"{sel_pos(at, host)},r={r}"
+
     def inside_box(at):
         return f"{sel_pos(at, inside_box_lo)},dx=4,dy=2,dz=2"
 
     ok = '{"rawtext":[{"text":"§aYou bought this plot for §6%d %s§a!"}]}' % (PRICE, MONEY)
-    owned = '{"rawtext":[{"text":"§cThis plot is already owned."}]}'
-    fail = ('{"rawtext":[{"text":"§eThis plot costs §6%d %s§e. You need enough %s '
-            'and can only own one plot."}]}' % (PRICE, MONEY, MONEY))
+    owned = '{"rawtext":[{"text":"§cThis plot is owned by someone else."}]}'
+    broke = ('{"rawtext":[{"text":"§cThis plot costs §6%d %s§c. You only have §6"},'
+             '{"score":{"name":"@s","objective":"%s"}},{"text":" %s§c."}]}' % (PRICE, MONEY, MONEY, MONEY))
 
-    buyer = "@a[scores={pb=4}]"
+    def presser(p, pb=1, extra=""):
+        return f"@a[scores={{pb={pb}{extra}}},{near(p)}]"
+
     steps = [
-        # who pressed: nearest player to the button
-        lambda p: "scoreboard players set @p[r=4] pb 1",
-        lambda p: "scoreboard players add @a[scores={pb=1}] plotid 0",
-        # pressed from inside the plot -> send them back to the walkway
+        # scan: the nearest player to this plot's button is the presser
+        lambda p: f"scoreboard players set @p[{near(p, 4)}] pb 1",
+        # every player gets a permanent player id (pid) the first time they press any plot button
+        lambda p: f"scoreboard players add {presser(p)} pid 0",
+        lambda p: f"execute if entity {presser(p, extra=',pid=0')} run scoreboard players add #next pid 1",
+        lambda p: f"scoreboard players operation {presser(p, extra=',pid=0')} pid = #next pid",
+        # pressed from inside the plot -> back out to the walkway (always allowed)
         lambda p: f"scoreboard players set @a[scores={{pb=1}},{inside_box(p)}] pb 2",
-        lambda p: f"tp @a[scores={{pb=2}}] {rel(p, outside_spot)}",
-        # sold plot: owner goes in, everyone else gets a message
-        lambda p: f"execute as @a[scores={{pb=1}}] if score @s plotid = {M(p, ',c=1')} plotid "
+        lambda p: f"tp {presser(p, 2)} {rel(p, outside_spot)}",
+        # sold plot: the owner goes in, anyone else gets a message
+        lambda p: f"execute as {presser(p)} if score @s pid = {M(p, ',c=1')} pid "
                   f"run tp @s {rel(p, inside_spot)}",
-        lambda p: f"execute as @a[scores={{pb=1}}] if entity {M(p)} unless score @s plotid = "
-                  f"{M(p, ',c=1')} plotid run tellraw @s {owned}",
-        # unsold plot: pick a buyer who can pay and has no plot yet
+        lambda p: f"execute as {presser(p)} if entity {M(p)} unless score @s pid = "
+                  f"{M(p, ',c=1')} pid run tellraw @s {owned}",
+        # unsold plot: only a presser with at least PRICE money becomes the buyer (pb=4)
         lambda p: f"execute unless entity {M(p)} run scoreboard players set "
-                  f"@p[scores={{pb=1,{MONEY}={PRICE}..,plotid=0}}] pb 4",
-        lambda p: f"execute unless entity {M(p)} run tellraw @a[scores={{pb=1}}] {fail}",
-        # the purchase
-        lambda p: f"scoreboard players remove {buyer} {MONEY} {PRICE}",
-        lambda p: f"execute if entity {buyer} run scoreboard players add #next plotid 1",
-        lambda p: f"scoreboard players operation {buyer} plotid = #next plotid",
-        lambda p: f"execute if entity {buyer} run summon armor_stand plotmark {rel(p, marker)}",
-        lambda p: f"execute if entity {buyer} run scoreboard players operation {M(p)} plotid = #next plotid",
-        lambda p: f"execute if entity {buyer} run setblock {rel(p, lamp)} red_concrete",
-        lambda p: f"tellraw {buyer} {ok}",
-        lambda p: f"tp {buyer} {rel(p, inside_spot)}",
+                  f"@p[scores={{pb=1,{MONEY}={PRICE}..}},{near(p)}] pb 4",
+        lambda p: f"execute unless entity {M(p)} as {presser(p)} run tellraw @s {broke}",
+        # the purchase: only pb=4 players, and the money check is repeated on the payment itself
+        lambda p: f"scoreboard players remove {presser(p, 4, f',{MONEY}={PRICE}..')} {MONEY} {PRICE}",
+        lambda p: f"execute if entity {presser(p, 4)} run summon armor_stand plotmark {rel(p, marker)}",
+        lambda p: f"execute as {presser(p, 4)} run scoreboard players operation {M(p)} pid = @s pid",
+        lambda p: f"execute if entity {presser(p, 4)} run setblock {rel(p, lamp)} red_concrete",
+        lambda p: f"tellraw {presser(p, 4)} {ok}",
+        lambda p: f"tp {presser(p, 4)} {rel(p, inside_spot)}",
         lambda p: "scoreboard players reset @a pb",
     ]
     assert X + len(steps) - 1 == CHAIN_END_X, "chain must end at x=25"

@@ -8,7 +8,7 @@
 ## One-time setup in the world
 
 ```
-/scoreboard objectives add plotid dummy
+/scoreboard objectives add pid dummy
 /scoreboard objectives add pb dummy
 ```
 
@@ -16,11 +16,12 @@
 
 ## How a buy station works
 
-Each plot has a polished blackstone button on both sides of its walkway wall at x=9. Above it is a lamp block: lime means for sale, red means sold. Pressing either button fires a hidden chain of command blocks under the wall (x9 to x25):
+Each plot has a polished blackstone button on both sides of its walkway wall at x=9. Above it is a lamp block: lime means for sale, red means sold. Pressing either button fires that plot's own hidden chain of command blocks under the wall (x9 to x25). Every player selector in the chain is limited to a few blocks around that plot's button, so each plot only scans its own players.
 
-1. The nearest player within 4 blocks is marked as the presser (`pb=1`).
-2. If they pressed from inside the plot, they are teleported back to the walkway.
-3. If the plot is sold (a hidden `plotmark` armor stand exists under the walkway), the owner is teleported in. Anyone else is told it's owned.
-4. If the plot is unsold and the presser has at least 10000 `c` and no plot yet, they pay 10000 `c`. They then get the next plot id, the armor stand is summoned with that id, the lamp turns red and they are teleported in.
+1. The nearest player within 4 blocks of the button is the presser (`pb=1`). The first time a player presses any plot button, they get a permanent player id (`pid`) from the counter `#next`.
+2. Pressed from inside the plot: the presser is teleported back to the walkway. This always works.
+3. Plot sold (a hidden `plotmark` armor stand under the walkway stores the owner's `pid`): the owner is teleported in, whenever they want. Anyone else is told it's owned.
+4. Plot unsold: only a presser with at least 10000 `c` becomes the buyer. The 10000 is removed only from that buyer, and the removal checks the balance again. Players with less are told the price and their balance, and nothing is taken.
+5. After a purchase, the armor stand is summoned with the buyer's `pid`, the lamp turns red and the buyer is teleported in.
 
-Plot ids come from the fake player `#next` on `plotid`. A player's `plotid` is the id of their plot (0 = none).
+Players can buy as many plots as they can afford. Ownership lives on each plot's armor stand, not on the player.
