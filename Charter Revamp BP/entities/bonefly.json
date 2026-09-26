@@ -73,8 +73,22 @@
             },
             "bonefly:tamed": {
                 "minecraft:is_tamed": {},
+                // only once tamed, so feeding a bone to a hurt wild bonefly tames it instead of healing it
+                "minecraft:healable": {
+                    "items": [
+                        {
+                            "item": "bone",
+                            "heal_amount": 6
+                        },
+                        {
+                            "item": "bone_block",
+                            "heal_amount": 16
+                        }
+                    ]
+                },
                 "minecraft:rideable": {
                     "seat_count": 1,
+                    "crouching_skip_interact": true,
                     "on_rider_enter_event": "bonefly:ridding",
                     "on_rider_exit_event": "bonefly:not_riding",
                     "family_types": [
@@ -90,14 +104,17 @@
                     }
                 }
             },
+            // flight controls match the vanilla happy ghast: look to steer, WASD to move, jump to climb
             "bonefly:ridding": {
                 "minecraft:can_fly": {},
                 "minecraft:physics": {
-                    "has_gravity": false
+                    "has_gravity": false,
+                    "has_collision": true
                 },
                 "minecraft:body_rotation_always_follows_head": {},
-                "minecraft:behavior.player_ride_tamed": {},
-                "minecraft:input_ground_controlled": {},
+                "minecraft:behavior.player_ride_tamed": {
+                    "priority": 1
+                },
                 "minecraft:free_camera_controlled": {
                     "strafe_speed_modifier": 1.0,
                     "backwards_movement_modifier": 0.5
@@ -114,7 +131,11 @@
             },
             "bonefly:gravity": {
                 "minecraft:physics": {
-                    "has_gravity": true
+                    "has_gravity": true,
+                    "has_collision": true
+                },
+                "minecraft:movement": {
+                    "value": 0.3
                 }
             }
         },
@@ -134,11 +155,11 @@
                 "width": 1.8,
                 "height": 2.5
             },
+            // it's a flyer: without this, dismounting mid-air drops it to its death
             "minecraft:damage_sensor": {
                 "triggers": {
                     "cause": "fall",
-                    "deals_damage": "yes",
-                    "damage_modifier": -2
+                    "deals_damage": "no"
                 }
             },
             "minecraft:movement": {
@@ -157,18 +178,6 @@
             },
             "minecraft:jump.static": {},
             "minecraft:can_climb": {},
-            "minecraft:healable": {
-                "items": [
-                    {
-                        "item": "bone",
-                        "heal_amount": 6
-                    },
-                    {
-                        "item": "bone_block",
-                        "heal_amount": 16
-                    }
-                ]
-            },
             "minecraft:nameable": {},
             "minecraft:leashable_to": {},
             "minecraft:leashable": {
@@ -214,7 +223,8 @@
             "minecraft:on_tame": {
                 "add": {
                     "component_groups": [
-                        "bonefly:tamed"
+                        "bonefly:tamed",
+                        "bonefly:gravity"
                     ]
                 },
                 "remove": {
@@ -258,24 +268,24 @@
             "bonefly:fly": {
                 "add": {
                     "component_groups": [
-                        "bonefly:fly"
+                        "bonefly:wild_fly"
                     ]
                 },
                 "remove": {
                     "component_groups": [
-                        "bonefly:ground"
+                        "bonefly:wild_ground"
                     ]
                 }
             },
             "bonefly:ground": {
                 "add": {
                     "component_groups": [
-                        "bonefly:ground"
+                        "bonefly:wild_ground"
                     ]
                 },
                 "remove": {
                     "component_groups": [
-                        "bonefly:fly"
+                        "bonefly:wild_fly"
                     ]
                 }
             },

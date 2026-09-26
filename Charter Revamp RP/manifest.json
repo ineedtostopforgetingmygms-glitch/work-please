@@ -2,17 +2,17 @@
   "format_version": 2,
   "header": {
     "name": "Charter Revamp",
-    "description": "§bVersion: 1.0.0",
+    "description": "§bVersion: 1.0.1",
     "uuid": "295165c1-ada6-4229-bf83-28adc7185664",
-    "version": [ 1, 0, 0 ],
+    "version": [ 1, 0, 1 ],
     "min_engine_version": [ 1, 21, 20]
   },
   "modules": [
     {
-      "description": "§bVersion: 1.0.0",
+      "description": "§bVersion: 1.0.1",
       "type": "resources",
       "uuid": "0186450c-aa6e-42cf-ae0f-085e1a4b0fac",
-      "version": [ 1, 0, 0]
+      "version": [ 1, 0, 1 ]
     }
 	],
   "settings": [
