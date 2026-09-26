@@ -10,7 +10,8 @@
 // A station only works when it sits in the real structure: a border block 3 below the lamp and
 // a deny block under the walkway next to it. Players can't get those blocks, so they can't
 // build fake stations. Plot data lives in world dynamic properties keyed by the station's
-// position, so there are no marker entities and no command blocks.
+// position, so there are no marker entities and no command blocks. The lamp is the proof of a
+// sale: an owned plot whose lamp is lime again was re-pasted, so its old data is dropped.
 import { world, BlockPermutation } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 
@@ -64,6 +65,17 @@ function loadPlot(key) {
 
 function savePlot(key, plot) {
   world.setDynamicProperty(key, JSON.stringify(plot));
+}
+
+// Forget a plot (and unlink it from plots it was combined with).
+function clearPlot(key) {
+  for (const k of loadPlot(key)?.links ?? []) {
+    const p = loadPlot(k);
+    if (!p) continue;
+    p.links = p.links.filter((l) => l !== key);
+    savePlot(k, p);
+  }
+  world.setDynamicProperty(key, undefined);
 }
 
 // Keys of this plot and every plot combined with it.
@@ -170,7 +182,7 @@ async function confirmBuy(player, host, lamp, into) {
   );
   if (res.canceled || res.selection !== 0) return;
   // The plot may have been bought by someone else while the form was open.
-  if (loadPlot(keyOf(host)) || lamp.typeId !== FOR_SALE) {
+  if (loadPlot(keyOf(host))) {
     player.sendMessage("§cSomeone else just bought this plot.");
     return;
   }
@@ -350,7 +362,13 @@ world.afterEvents.buttonPush.subscribe(({ block, source }) => {
   const fromWalkway = face.x === walkway.x && face.z === walkway.z;
   const host = lamp.below(); // the wall block under the lamp; plot data is keyed by it
   const key = keyOf(host);
-  const plot = loadPlot(key);
+  let plot = loadPlot(key);
+  if (plot && lamp.typeId === FOR_SALE) {
+    // A lime lamp on an owned plot means the segment was pasted again (plot reset), so the old
+    // owner data no longer belongs to what's there. The plot is for sale again.
+    clearPlot(key);
+    plot = undefined;
+  }
 
   if (player.isSneaking && plot && isOwner(plot, player)) {
     ownerMenu(player, lamp, plotDir);
@@ -378,10 +396,6 @@ world.afterEvents.buttonPush.subscribe(({ block, source }) => {
     } else {
       player.sendMessage(`§cThis plot is owned by §f${plot.owner.name}§c.`);
     }
-    return;
-  }
-  if (lamp.typeId === SOLD) {
-    player.sendMessage("§cThis plot is already owned.");
     return;
   }
   confirmBuy(player, host, lamp, plotDir);
