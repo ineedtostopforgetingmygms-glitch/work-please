@@ -1,0 +1,24 @@
+{
+	"entity_sounds": {
+		"entities": {
+			"charter:raven": {
+				"events": {
+					"ambient": "Raven",
+					"death": "Raven",
+					"hurt": "Raven"
+				},
+				"pitch": [ 1.00 ],
+				"volume": 1.00
+			},
+			"charter:soulmould": {
+				"events": {
+					"ambient": "Soulmould_Ambient",
+					"death": "Soulmould_Death",
+					"hurt": "Soulmould_Damage"
+				},
+				"pitch": [ 1.00 ],
+				"volume": 1.00
+			}
+		}
+	}
+}

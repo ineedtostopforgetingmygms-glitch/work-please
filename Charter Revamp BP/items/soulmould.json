@@ -1,0 +1,21 @@
+{
+    "format_version": "1.21.130",
+    "minecraft:item": {
+        "description": {
+            "identifier": "charter:soulmould_item",
+            "menu_category": {
+                "category": "items"
+            }
+        },
+        "components": {
+            "minecraft:max_stack_size": 1,
+            "minecraft:icon": "soulmould",
+            "minecraft:display_name": {
+                "value": "Soulmould"
+            },
+            "minecraft:fire_resistant": {
+                "value": true
+            }
+        }
+    }
+}

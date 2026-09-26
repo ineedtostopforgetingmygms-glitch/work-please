@@ -1,0 +1,38 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "Charter Revamp",
+        "description": "§bVersion: 1.0.0",
+        "min_engine_version": [ 1, 21, 20 ],
+        "uuid": "9b34e5ab-6fe8-4617-9243-820a3fd29ab7",
+        "version":[ 1, 0, 0 ]
+    },
+    "modules": [
+        {
+            "type": "data",
+            "uuid": "645259eb-ebe3-400b-a9bc-62e68d42d386",
+            "version":[ 1, 0, 0 ]
+        },
+        {
+            "type": "script",
+            "language": "javascript",
+            "entry": "scripts/Charter/Charter.js",
+            "uuid": "a948251a-cd8d-4e1f-979a-eb8c190e051d",
+            "version":[ 1, 0, 0 ]
+        }
+    ],
+    "dependencies": [
+        {
+            "module_name": "@minecraft/server",
+            "version": "beta"
+        },
+        {
+            "module_name": "@minecraft/server-ui",
+            "version": "2.0.0"
+        },
+        {
+            "uuid": "295165c1-ada6-4229-bf83-28adc7185664",
+            "version": [ 1, 0, 0 ]
+        }
+    ]
+}

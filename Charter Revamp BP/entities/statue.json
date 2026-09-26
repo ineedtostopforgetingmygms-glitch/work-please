@@ -1,0 +1,265 @@
+{
+	"format_version": "1.20.0",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "charter:statue",
+			"spawn_category": "creature",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"properties": {
+				"statue:head_scale": {
+					"client_sync": true,
+					"default": false,
+					"type": "bool"
+				},
+				"statue:leftarm_scale": {
+					"client_sync": true,
+					"default": false,
+					"type": "bool"
+				},
+				"statue:rightarm_scale": {
+					"client_sync": true,
+					"default": false,
+					"type": "bool"
+				},
+				"statue:leftleg_scale": {
+					"client_sync": true,
+					"default": false,
+					"type": "bool"
+				},
+				"statue:rightleg_scale": {
+					"client_sync": true,
+					"default": false,
+					"type": "bool"
+				},
+				"statue:layer": {
+					"client_sync": true,
+					"default": false,
+					"type": "bool"
+				},
+				"statue:head_x": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:head_y": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:head_z": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:waist_x": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:waist_y": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:waist_z": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:leftarm_x": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:leftarm_y": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:leftarm_z": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:rightarm_x": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:rightarm_y": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:rightarm_z": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:leftleg_x": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:leftleg_y": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:leftleg_z": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:rightleg_x": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:rightleg_y": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				},
+				"statue:rightleg_z": {
+					"client_sync": true,
+					"default": 0.0,
+					"type": "float",
+					"range": [
+						0.0,
+						360.0
+					]
+				}
+			}
+		},
+		"components": {
+			"minecraft:health": {
+				"value": 1,
+				"max": 1
+			},
+			"minecraft:loot": {
+				"table": "loot_tables/entities/statue.json"
+			},
+			"minecraft:inventory": {
+				"can_be_siphoned_from": false,
+				"container_type": "inventory",
+				"inventory_size": 6,
+				"private": false
+			},
+			"minecraft:physics": {},
+			"minecraft:renders_when_invisible": {},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:nameable": {
+				"always_show": false,
+				"allow_name_tag_renaming": false
+			},
+			"minecraft:collision_box": {
+				"width": 0.6,
+				"height": 1.8
+			},
+			"minecraft:damage_sensor": {
+				"triggers": [
+					{
+						"cause": "all",
+						"deals_damage": false
+					}
+				]
+			}
+		},
+		"component_groups": {
+			"statue:outer_layer": {
+				"minecraft:skin_id": {
+					"value": 1
+				}
+			}
+		},
+		"events": {
+			"statue:outer_layer": {
+				"add": {
+					"component_groups": [
+						"statue:outer_layer"
+					]
+				}
+			},
+			"statue:remove_outer_layer": {
+				"remove": {
+					"component_groups": [
+						"statue:outer_layer"
+					]
+				}
+			}
+		}
+	}
+}

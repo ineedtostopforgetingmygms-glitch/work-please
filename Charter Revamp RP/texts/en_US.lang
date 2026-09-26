@@ -1,0 +1,3 @@
+item.spawn_egg.entity.content:raven.name=Raven Spawn Egg
+entity.content:raven.name=Raven
+content:itemGroup.name.items.food=Content Food

@@ -1,0 +1,38 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.charter.idle": {
+			"loop": true
+		},
+		"animation.player.charter.2_handed_sword": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"leftArm": {
+					"rotation": [-30, 30, "15 - math.cos(q.anim_time*10*15)"]
+				},
+				"rightArm": {
+					"rotation": [-45, -35, "5 + math.cos(q.anim_time*10*15)"]
+				}
+			}
+		},
+		"animation.player.charter.2_handed_sword_attack": {
+			"animation_length": 0.125,
+			"override_previous_animation": true,
+			"bones": {
+				"leftArm": {
+					"rotation": {
+						"0.0": [-135, 47.5, "-5- math.cos(q.anim_time*10*15)"],
+						"0.125": [-30, 30, "15 - math.cos(q.anim_time*10*15)"]
+					}
+				},
+				"rightArm": {
+					"rotation": {
+						"0.0": [-145, -12.5, "5 + math.cos(q.anim_time*10*15)"],
+						"0.125": [-45, -35, "5 + math.cos(q.anim_time*10*15)"]
+					}
+				}
+			}
+		}
+	}
+}

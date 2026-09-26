@@ -1,0 +1,264 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.splash": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.splash_0",
+            "texture.splash_1",
+            "texture.splash_2",
+            "texture.splash_3",
+            "texture.splash_4",
+            "texture.splash_5",
+            "texture.splash_6",
+            "texture.splash_7",
+            "texture.splash_8",
+            "texture.splash_9",
+            "texture.splash_10",
+            "texture.splash_11",
+            "texture.splash_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.life_time=query.life_time*8;return array.splash[temp.life_time];"
+			],
+      "part_visibility": [
+        {"splash": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		},
+    "controller.render.splash_center": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.splash_0",
+            "texture.splash_1",
+            "texture.splash_2",
+            "texture.splash_3",
+            "texture.splash_4",
+            "texture.splash_5",
+            "texture.splash_6",
+            "texture.splash_7",
+            "texture.splash_8",
+            "texture.splash_9",
+            "texture.splash_10",
+            "texture.splash_11",
+            "texture.splash_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.delayed_time = math.max(0, query.life_time - 0.75); temp.frame = math.min(12, math.floor(temp.delayed_time * 8)); return array.splash[temp.frame];"
+			],
+      "part_visibility": [
+        {"wave": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		},
+
+    "controller.render.splash_rim": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.splash_rim_0",
+            "texture.splash_rim_1",
+            "texture.splash_rim_2",
+            "texture.splash_rim_3",
+            "texture.splash_rim_4",
+            "texture.splash_rim_5",
+            "texture.splash_rim_6",
+            "texture.splash_rim_7",
+            "texture.splash_rim_8",
+            "texture.splash_rim_9",
+            "texture.splash_rim_10",
+            "texture.splash_rim_11",
+            "texture.splash_rim_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.life_time=query.life_time*8;return array.splash[temp.life_time];"
+			],
+      "part_visibility": [
+        {"splash": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		},
+    "controller.render.splash_rim_center": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.splash_rim_0",
+            "texture.splash_rim_1",
+            "texture.splash_rim_2",
+            "texture.splash_rim_3",
+            "texture.splash_rim_4",
+            "texture.splash_rim_5",
+            "texture.splash_rim_6",
+            "texture.splash_rim_7",
+            "texture.splash_rim_8",
+            "texture.splash_rim_9",
+            "texture.splash_rim_10",
+            "texture.splash_rim_11",
+            "texture.splash_rim_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.delayed_time = math.max(0, query.life_time - 0.75); temp.frame = math.min(12, math.floor(temp.delayed_time * 8)); return array.splash[temp.frame];"
+			],
+      "part_visibility": [
+        {"wave": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		},
+
+    "controller.render.lava_splash": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.lava_splash_0",
+            "texture.lava_splash_1",
+            "texture.lava_splash_2",
+            "texture.lava_splash_3",
+            "texture.lava_splash_4",
+            "texture.lava_splash_5",
+            "texture.lava_splash_6",
+            "texture.lava_splash_7",
+            "texture.lava_splash_8",
+            "texture.lava_splash_9",
+            "texture.lava_splash_10",
+            "texture.lava_splash_11",
+            "texture.lava_splash_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.life_time=query.life_time*8;return array.splash[temp.life_time];"
+			],
+      "part_visibility": [
+        {"splash": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		},
+    "controller.render.lava_splash_center": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.lava_splash_0",
+            "texture.lava_splash_1",
+            "texture.lava_splash_2",
+            "texture.lava_splash_3",
+            "texture.lava_splash_4",
+            "texture.lava_splash_5",
+            "texture.lava_splash_6",
+            "texture.lava_splash_7",
+            "texture.lava_splash_8",
+            "texture.lava_splash_9",
+            "texture.lava_splash_10",
+            "texture.lava_splash_11",
+            "texture.lava_splash_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.delayed_time = math.max(0, query.life_time - 0.75); temp.frame = math.min(12, math.floor(temp.delayed_time * 8)); return array.splash[temp.frame];"
+			],
+      "part_visibility": [
+        {"wave": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		},
+
+    "controller.render.end_splash": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.splash_0",
+            "texture.splash_1",
+            "texture.splash_2",
+            "texture.splash_3",
+            "texture.splash_4",
+            "texture.splash_5",
+            "texture.splash_6",
+            "texture.splash_7",
+            "texture.splash_8",
+            "texture.splash_9",
+            "texture.splash_10",
+            "texture.splash_11",
+            "texture.splash_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.life_time=query.life_time*8;return array.splash[temp.life_time];"
+			],
+      "part_visibility": [
+        {"splash": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		},
+    "controller.render.end_splash_center": {
+      "arrays": {
+        "textures": {
+          "array.splash": [
+            "texture.splash_0",
+            "texture.splash_1",
+            "texture.splash_2",
+            "texture.splash_3",
+            "texture.splash_4",
+            "texture.splash_5",
+            "texture.splash_6",
+            "texture.splash_7",
+            "texture.splash_8",
+            "texture.splash_9",
+            "texture.splash_10",
+            "texture.splash_11",
+            "texture.splash_12"
+          ]
+        }
+      },
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": [
+				"temp.delayed_time = math.max(0, query.life_time - 0.75); temp.frame = math.min(12, math.floor(temp.delayed_time * 8)); return array.splash[temp.frame];"
+			],
+      "part_visibility": [
+        {"wave": false}
+      ],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		}
+	}
+}

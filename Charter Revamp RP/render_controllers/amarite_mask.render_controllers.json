@@ -1,0 +1,29 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.amarite_mask": {
+			"geometry": "Geometry.player_mask",
+			"materials": [{"*": "Material.mask_material"}],
+			"textures": ["q.property('content:masks') == 1 ? Texture.axolotl : q.property('content:masks') == 2 ? Texture.bunny : q.property('content:masks') == 3 ? Texture.butterfly : q.property('content:masks') == 4 ? Texture.crown : q.property('content:masks') == 5 ? Texture.demon : q.property('content:masks') == 6 ? Texture.fox : q.property('content:masks') == 7 ? Texture.guardian : q.property('content:masks') == 8 ? Texture.moon : q.property('content:masks') == 9 ? Texture.oni : q.property('content:masks') == 10 ? Texture.unicorn : q.property('content:masks') == 11 ? Texture.warden : q.property('content:masks') == 12 ? Texture.winsweep : q.property('content:masks') == 12 ? Texture.void : Texture.brand"],
+      "overlay_color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "is_hurt_color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "on_fire_color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "ignore_lighting": false
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+	"format_version": "1.14.0",
+	"sound_definitions": {
+		"Soulmould_Ambient": {
+			"__use_legacy_max_distance": true,
+			"category": "record",
+			"max_distance": 10.0,
+			"min_distance": null,
+			"sounds": [
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_ambient_1",
+					"stream": true,
+					"volume": 1.00
+				},
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_ambient_2",
+					"stream": true,
+					"volume": 1.00
+				}
+			]
+		},
+		"Soulmould_Attack_1": {
+			"__use_legacy_max_distance": true,
+			"category": "record",
+			"max_distance": 10.0,
+			"min_distance": null,
+			"sounds": [
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_attack_1",
+					"stream": true,
+					"volume": 1.00
+				},
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_attack_2",
+					"stream": true,
+					"volume": 1.00
+				},
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_attack_3",
+					"stream": true,
+					"volume": 1.00
+				}
+			]
+		},
+		"Soulmould_Attack_2": {
+			"__use_legacy_max_distance": true,
+			"category": "record",
+			"max_distance": 10.0,
+			"min_distance": null,
+			"sounds": [
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_attack_2",
+					"stream": true,
+					"volume": 1.00
+				}
+			]
+		},
+		"Soulmould_Attack_3": {
+			"__use_legacy_max_distance": true,
+			"category": "record",
+			"max_distance": 10.0,
+			"min_distance": null,
+			"sounds": [
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_attack_3",
+					"stream": true,
+					"volume": 1.00
+				}
+			]
+		},
+		"Soulmould_Damage": {
+			"__use_legacy_max_distance": true,
+			"category": "record",
+			"max_distance": 10.0,
+			"min_distance": null,
+			"sounds": [
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_damage_1",
+					"stream": true,
+					"volume": 1.00
+				}
+			]
+		},
+		"Soulmould_Death": {
+			"__use_legacy_max_distance": true,
+			"category": "record",
+			"max_distance": 10.0,
+			"min_distance": null,
+			"sounds": [
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/soulmould/soulmould_death_1",
+					"stream": true,
+					"volume": 1.00
+				}
+			]
+		},
+		"Raven": {
+			"__use_legacy_max_distance": true,
+			"category": "record",
+			"max_distance": 10.0,
+			"min_distance": null,
+			"sounds": [
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/raven/raven_1",
+					"stream": true,
+					"volume": 1.00
+				},
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/raven/raven_2",
+					"stream": true,
+					"volume": 1.00
+				},
+				{
+					"load_on_low_memory": true,
+					"name": "sounds/Charter/raven/raven_3",
+					"stream": true,
+					"volume": 1.00
+				}
+			]
+		}
+	}
+}

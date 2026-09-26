@@ -1,0 +1,30 @@
+{
+    "format_version": "1.12.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "charter:statue",
+            "materials": {
+                "default": "entity_alphatest"
+            },
+            "textures": {
+                "default": "textures/Charter/entity/statue"
+            },
+            "geometry": {
+                "default": "geometry.statue"
+            },
+            "animations": {
+                "action": "animation.statue.action"
+            },
+            "scripts": {
+                "scale": "0.9375",
+                "animate": [
+                    "action"
+                ]
+            },
+            "render_controllers": [
+                "controller.render.default"
+            ],
+            "enable_attachables": true
+        }
+    }
+}

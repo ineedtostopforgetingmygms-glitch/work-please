@@ -1,0 +1,42 @@
+{
+	"format_version": "1.19.0",
+	"animation_controllers": {
+		"controller.animation.player.charter": {
+			"states": {
+				"default": {
+					"animations": ["idle"],
+					"transitions": [
+						{"2_handed_sword": "query.equipped_item_any_tag('slot.weapon.mainhand', 'weapon:2_handed')"}
+					],
+					"blend_transition": {
+						"0.0": 1,
+						"0.0167": 0.99451,
+						"0.0333": 0.9561,
+						"0.05": 0.85185,
+						"0.0667": 0.64883,
+						"0.0833": 0.35117,
+						"0.1": 0.14815,
+						"0.1167": 0.0439,
+						"0.1333": 0.00549,
+						"0.15": 0
+					}
+				},
+				"2_handed_sword": {
+					"animations": [
+						{"2_handed_sword": "!v.is_first_person && query.get_equipped_item_name('off_hand') == '' && !query.is_using_item && !q.is_tamed"}
+					],
+					"transitions": [
+						{"default": "!query.equipped_item_any_tag('slot.weapon.mainhand', 'weapon:2_handed')"},
+						{"2_handed_weapon_attack": "v.attack_time > 0.1"}
+					]
+				},
+				"2_handed_weapon_attack": {
+					"animations": ["2_handed_sword_attack"],
+					"transitions": [
+						{"2_handed_sword": "q.any_animation_finished || v.attack_time < 0.1"}
+					]
+				}
+			}
+		}
+	}
+}

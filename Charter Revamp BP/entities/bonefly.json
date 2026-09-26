@@ -1,0 +1,291 @@
+{
+    "format_version": "1.21.110",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "charter:bonefly",
+            "spawn_category": "creature",
+            "is_spawnable": true,
+            "is_summonable": true,
+            "properties": {
+                "bonefly:sit": {
+                    "type": "bool",
+                    "client_sync": false,
+                    "default": false
+                },
+                "bonefly:fly": {
+                    "type": "bool",
+                    "client_sync": false,
+                    "default": false
+                },
+                "bonefly:behavior": {
+                    "type": "enum",
+                    "values": [
+                        "default",
+                        "big",
+                        "cute",
+                        "grumpy",
+                        "mad",
+                        "puglin",
+                        "sad"
+                    ],
+                    "default": "default",
+                    "client_sync": true
+                }
+            }
+        },
+        "component_groups": {
+            "bonefly:wild": {
+                "minecraft:tameable": {
+                    "probability": 0.25,
+                    "tame_items": "bone",
+                    "tame_event": {
+                        "event": "minecraft:on_tame",
+                        "target": "self"
+                    }
+                }
+            },
+            "bonefly:wild_fly": {
+                "minecraft:can_fly": {},
+                "minecraft:physics": {
+                    "has_gravity": false,
+                    "has_collision": true
+                },
+                "minecraft:flying_speed": {
+                    "value": 0.088
+                }
+            },
+            "bonefly:wild_ground": {
+                "minecraft:physics": {
+                    "has_gravity": true,
+                    "has_collision": true
+                },
+                "minecraft:movement": {
+                    "value": 0.3
+                }
+            },
+            "bonefly:wild_angry": {},
+            "bonefly:dormant": {},
+            "bonefly:collision": {
+                "minecraft:is_collidable": {},
+                "minecraft:physics": {
+                    "has_collision": true
+                }
+            },
+            "bonefly:tamed": {
+                "minecraft:is_tamed": {},
+                "minecraft:rideable": {
+                    "seat_count": 1,
+                    "on_rider_enter_event": "bonefly:ridding",
+                    "on_rider_exit_event": "bonefly:not_riding",
+                    "family_types": [
+                        "player"
+                    ],
+                    "interact_text": "action.interact.ride.bonefly",
+                    "seats": {
+                        "position": [
+                            0,
+                            2.3,
+                            0.6
+                        ]
+                    }
+                }
+            },
+            "bonefly:ridding": {
+                "minecraft:can_fly": {},
+                "minecraft:physics": {
+                    "has_gravity": false
+                },
+                "minecraft:body_rotation_always_follows_head": {},
+                "minecraft:behavior.player_ride_tamed": {},
+                "minecraft:input_ground_controlled": {},
+                "minecraft:free_camera_controlled": {
+                    "strafe_speed_modifier": 1.0,
+                    "backwards_movement_modifier": 0.5
+                },
+                "minecraft:vertical_movement_action": {
+                    "vertical_velocity": 0.5
+                },
+                "minecraft:flying_speed": {
+                    "value": 0.088
+                },
+                "minecraft:movement": {
+                    "value": 0.3
+                }
+            },
+            "bonefly:gravity": {
+                "minecraft:physics": {
+                    "has_gravity": true
+                }
+            }
+        },
+        "components": {
+            "minecraft:type_family": {
+                "family": [
+                    "bonefly",
+                    "monster",
+                    "mob"
+                ]
+            },
+            "minecraft:health": {
+                "value": 20,
+                "max": 20
+            },
+            "minecraft:collision_box": {
+                "width": 1.8,
+                "height": 2.5
+            },
+            "minecraft:damage_sensor": {
+                "triggers": {
+                    "cause": "fall",
+                    "deals_damage": "yes",
+                    "damage_modifier": -2
+                }
+            },
+            "minecraft:movement": {
+                "value": 0.3
+            },
+            "minecraft:attack": {
+                "damage": 8
+            },
+            // hover is the reason why the bonefly has no gravity when it's pushed
+            "minecraft:movement.hover": {},
+            "minecraft:navigation.hover": {
+                "can_path_over_water": true,
+                "avoid_damage_blocks": true,
+                "can_path_from_air": true,
+                "avoid_water": true
+            },
+            "minecraft:jump.static": {},
+            "minecraft:can_climb": {},
+            "minecraft:healable": {
+                "items": [
+                    {
+                        "item": "bone",
+                        "heal_amount": 6
+                    },
+                    {
+                        "item": "bone_block",
+                        "heal_amount": 16
+                    }
+                ]
+            },
+            "minecraft:nameable": {},
+            "minecraft:leashable_to": {},
+            "minecraft:leashable": {
+                "on_unleash": {
+                    "event": "minecraft:on_unleashed",
+                    "target": "self"
+                },
+                "presets": [
+                    {
+                        "hard_distance": 10,
+                        "max_distance": 14
+                    }
+                ]
+            },
+            "minecraft:behavior.float": {
+                "priority": 0
+            },
+            "minecraft:conditional_bandwidth_optimization": {},
+            "minecraft:balloonable": {},
+            "minecraft:breathable": {
+                "total_supply": 5,
+                "suffocate_time": 0,
+                "breathes_air": true,
+                "breathes_water": true
+            },
+            "minecraft:knockback_resistance": {
+                "value": 1
+            },
+            "minecraft:pushable": {
+                "is_pushable": true,
+                "is_pushable_by_piston": true
+            }
+        },
+        "events": {
+            "minecraft:entity_spawned": {
+                "add": {
+                    "component_groups": [
+                        "bonefly:wild",
+                        "bonefly:wild_ground"
+                    ]
+                }
+            },
+            "minecraft:on_tame": {
+                "add": {
+                    "component_groups": [
+                        "bonefly:tamed"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "bonefly:wild_ground",
+                        "bonefly:wild_fly",
+                        "bonefly:wild"
+                    ]
+                }
+            },
+            "bonefly:ridding": {
+                "add": {
+                    "component_groups": [
+                        "bonefly:ridding"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "bonefly:gravity"
+                    ]
+                },
+                "set_property": {
+                    "bonefly:fly": true
+                }
+            },
+            "bonefly:not_riding": {
+                "add": {
+                    "component_groups": [
+                        "bonefly:gravity"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "bonefly:ridding"
+                    ]
+                },
+                "set_property": {
+                    "bonefly:fly": false
+                }
+            },
+            "bonefly:fly": {
+                "add": {
+                    "component_groups": [
+                        "bonefly:fly"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "bonefly:ground"
+                    ]
+                }
+            },
+            "bonefly:ground": {
+                "add": {
+                    "component_groups": [
+                        "bonefly:ground"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "bonefly:fly"
+                    ]
+                }
+            },
+            "bonefly:set_dormant": {
+                "add": {
+                    "component_groups": [
+                        "bonefly:dormant"
+                    ]
+                }
+            }
+        }
+    }
+}

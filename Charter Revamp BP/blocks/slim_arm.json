@@ -1,0 +1,33 @@
+{
+	"format_version": "1.21.70",
+	"minecraft:block": {
+		"description": {
+			"identifier": "charter:slim_arm",
+			"menu_category": {
+				"category": "none",
+                "is_hidden_in_commands": false
+			}
+		},
+		"components": {
+			"minecraft:geometry": "geometry.slim_arm_block",
+			"minecraft:material_instances": {
+				"*": {
+					"texture": "charter:alex",
+					"render_method": "blend"
+				}
+			},
+			"minecraft:placement_filter": {
+				"conditions": [
+					{
+						"allowed_faces": [
+							"down"
+						],
+						"block_filter": [
+							"null:null"
+						]
+					}
+				]
+			}
+		}
+	}
+}

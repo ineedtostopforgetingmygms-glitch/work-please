@@ -1,0 +1,27 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.bonefly_skull",
+				"texture_width": 128,
+				"texture_height": 128,
+				"visible_bounds_width": 9,
+				"visible_bounds_height": 6.5,
+				"visible_bounds_offset": [0, 2.75, 0]
+			},
+			"bones": [
+				{
+					"name": "head",
+					"pivot": [0, 24, 0],
+					"cubes": [
+						{"origin": [-4, 24, -4], "size": [8, 8, 8], "uv": [0, 0]},
+						{"origin": [-4, 24, -4.01], "size": [8, 8, 0], "uv": [14, 16]},
+						{"origin": [-4, 30, -2], "size": [3, 8, 8], "pivot": [0, 27, 2], "rotation": [-45, -45, 0], "uv": [86, 0]},
+						{"origin": [1, 30, -2], "size": [3, 8, 8], "pivot": [0, 27, 2], "rotation": [-45, 45, 0], "uv": [0, 16]}
+					]
+				}
+			]
+		}
+	]
+}

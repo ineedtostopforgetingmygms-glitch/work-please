@@ -1,0 +1,40 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "charter:raven",
+			"materials": {
+				"default": "entity_emissive_alpha",
+				"alphatest": "entity_alphatest"
+			},
+			"textures": {
+				"raven_albino": "textures/Charter/entity/raven/raven_albino",
+				"raven_dark": "textures/Charter/entity/raven/raven_dark",
+				"raven_sea_green": "textures/Charter/entity/raven/raven_sea_green",
+				"raven_three_eyed": "textures/Charter/entity/raven/raven_three_eyed"
+			},
+			"geometry": {
+				"default": "geometry.raven"
+			},
+			"animations": {
+				"idle": "animation.raven.idle",
+				"sit": "animation.raven.sitIdle",
+				"flyFast": "animation.raven.flyFast",
+				"fly": "animation.raven.fly",
+				"behavior": "controller.animation.raven.behavior"
+			},
+			"scripts": {
+				"animate": [
+					"behavior"
+				]
+			},
+			"render_controllers": [
+				"controller.render.charter_raven"
+			],
+			"spawn_egg": {
+				"base_color": "#0b0c0c",
+				"overlay_color": "#535353"
+			}
+		}
+	}
+}

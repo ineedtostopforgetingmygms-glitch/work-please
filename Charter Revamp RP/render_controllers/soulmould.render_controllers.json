@@ -1,0 +1,21 @@
+{
+  "format_version": "1.8.0",
+  	"render_controllers": {
+    	"controller.render.soulmould": {
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": ["Texture.default"],
+      		"overlay_color": {},
+      		"is_hurt_color": {},
+      		"on_fire_color": {}
+		},
+    	"controller.render.soulmould_eyes": {
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.eyes"}],
+			"textures": ["Texture.eyes"],
+      		"overlay_color": {},
+      		"is_hurt_color": {},
+      		"on_fire_color": {}
+		}
+	}
+}

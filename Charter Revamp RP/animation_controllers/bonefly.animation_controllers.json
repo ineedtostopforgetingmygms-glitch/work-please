@@ -1,0 +1,72 @@
+{
+	"format_version": "1.19.0",
+	"animation_controllers": {
+		"controller.animation.bonefly.walk_behavior": {
+			"states": {
+				"default": {
+					"animations": ["idleGround"],
+					"transitions": [
+						{"walking": "q.is_moving && q.is_on_ground"},
+						{"idleFly": "!q.is_on_ground"},
+						{"idleDormant": "q.is_on_ground && !q.is_moving && (q.is_sitting || q.has_property('bonefly:sit'))"}
+					],
+					"blend_transition": 0.2
+				},
+				"idleFly": {
+					"animations": ["idleFly"],
+					"transitions": [
+						{"default": "q.is_on_ground"},
+						{"walking": "q.is_moving && q.is_on_ground"}
+					],
+					"blend_transition": 0.2
+				},
+				"walking": {
+					"animations": ["walkGround"],
+					"transitions": [
+						{"default": "q.is_on_ground && !q.is_moving"},
+						{"idleFly": "!q.is_on_ground || !q.has_gravity"}
+					],
+					"blend_transition": 0.2
+				},
+				"idleDormant": {
+					"animations": ["idleDormant"],
+					"transitions": [
+						{"default": "!q.is_sitting && !q.has_property('bonefly:sit')"}
+					],
+					"blend_transition": 0.2
+				}
+			}
+		},
+		"controller.animation.bonefly.behavior": {
+			"states": {
+				"default": {
+					"animations": [""],
+					"transitions": [
+						{"attack": "v.attack_time"},
+						{"hurt": "q.hurt_time > 0.1"}
+					],
+					"blend_transition": 0.2
+				},
+				"attack": {
+					"animations": [
+						{"stab": "v.attack_time && q.is_moving"},
+						{"stabIdle": "v.attack_time && !q.is_moving"}
+					],
+					"transitions": [
+						{"default": "!v.attack_time"},
+						{"hurt": "q.hurt_time > 0.1"}
+					],
+					"blend_transition": 0.2
+				},
+				"hurt": {
+					"animations": ["hurt"],
+					"transitions": [
+						{"attack": "v.attack_time"},
+						{"default": "q.hurt_time < 0.1"}
+					],
+					"blend_transition": 0.2
+				}
+			}
+		}
+	}
+}

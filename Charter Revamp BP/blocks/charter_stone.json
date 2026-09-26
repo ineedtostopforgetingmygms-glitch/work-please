@@ -1,0 +1,98 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:block": {
+		"description": {
+			"identifier": "charter:charter_stone",
+			"menu_category": {
+				"category": "none",
+				"is_hidden_in_commands": true
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"origin": [
+					-4.5,
+					0,
+					-4.5
+				],
+				"size": [
+					9,
+					16,
+					9
+				]
+			},
+			"minecraft:selection_box": {
+				"origin": [
+					-4.5,
+					0,
+					-4.5
+				],
+				"size": [
+					9,
+					16,
+					9
+				]
+			},
+			"minecraft:loot": "loot_tables/blocks/charter_stone.json",
+			"minecraft:map_color": "#474747",
+      		"tag:minecraft:is_pickaxe_item_destructible": {},
+			"minecraft:destructible_by_mining": {
+				"seconds_to_destroy": 15.0,
+				"item_specific_speeds": [
+					{
+						"item": {
+							"tags": "q.all_tags('minecraft:is_pickaxe', 'minecraft:wooden_tier')"
+						},
+						"destroy_speed": 3
+					},
+					{
+						"item": {
+							"tags": "q.all_tags('minecraft:is_pickaxe', 'minecraft:stone_tier')"
+						},
+						"destroy_speed": 2.5
+					},
+					{
+						"item": {
+							"tags": "q.all_tags('minecraft:is_pickaxe', 'minecraft:copper_tier')"
+						},
+						"destroy_speed": 2.0
+					},
+					{
+						"item": {
+							"tags": "q.all_tags('minecraft:is_pickaxe', 'minecraft:iron_tier')"
+						},
+						"destroy_speed": 1.5
+					},
+					{
+						"item": {
+							"tags": "q.all_tags('minecraft:is_pickaxe', 'minecraft:golden_tier')"
+						},
+						"destroy_speed": 0.75
+					},
+					{
+						"item": {
+							"tags": "q.all_tags('minecraft:is_pickaxe', 'minecraft:diamond_tier')"
+						},
+						"destroy_speed": 1.25
+					},
+					{
+						"item": {
+							"tags": "q.all_tags('minecraft:is_pickaxe', 'minecraft:netherite_tier')"
+						},
+						"destroy_speed": 1.0
+					}
+				]
+			},
+            "minecraft:destructible_by_explosion": {
+                "explosion_resistance": 15.0
+            },
+			"minecraft:geometry": "geometry.charter_stone",
+			"minecraft:material_instances": {
+				"*": {
+					"texture": "charter_stone",
+					"render_method": "alpha_test"
+				}
+			}
+		}
+	}
+}

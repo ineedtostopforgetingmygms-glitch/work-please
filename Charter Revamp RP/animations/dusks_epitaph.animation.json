@@ -1,0 +1,55 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.dusks_epitaph.handheld_3rd": {
+			"loop": true,
+			"bones": {
+				"root_item": {
+					"rotation": [0, 45, -90],
+					"position": [0, 9.5, -17.5],
+					"scale": [1.3, 0.8, 1.3]
+				}
+			}
+		},
+		"animation.dusks_epitaph.handheld_1st": {
+			"loop": true,
+			"bones": {
+				"root_item": {
+					"rotation": [-55, 10, 187.5],
+					"position": [9, -3, 1],
+					"scale": [2, 1, 2]
+				}
+			}
+		},
+		"animation.dusks_epitaph.block_1st": {
+			"loop": true,
+			"bones": {
+				"root_item": {
+					"rotation": [5, 52.5, 130],
+					"position": [18, 36, -13],
+					"scale": [2, 1.3, 2]
+				}
+			}
+		},
+		"animation.dusks_epitaph.accumulate_1st": {
+			"loop": true,
+			"bones": {
+				"root_item": {
+					"rotation": [-36.54982, -34.16147, 70.94253],
+					"position": [25.10378, 20.71963, -25.19048],
+					"scale": [2, 1, 2]
+				}
+			}
+		},
+		"animation.dusks_epitaph.accumulate_3rd": {
+			"loop": true,
+			"bones": {
+				"root_item": {
+					"rotation": [0, -90, -90],
+					"position": [-18, 11, 1],
+					"scale": [1.3, 0.8, 1.3]
+				}
+			}
+		}
+	}
+}

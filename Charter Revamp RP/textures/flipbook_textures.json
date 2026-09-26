@@ -1,0 +1,14 @@
+[
+  {
+    "flipbook_texture": "textures/Charter/blocks/torchlight",
+    "atlas_tile": "torchlight",
+    "ticks_per_frame": 5,
+    "blend_frames": false
+  },
+  {
+    "flipbook_texture": "textures/Charter/blocks/soullight",
+    "atlas_tile": "soullight",
+    "ticks_per_frame": 5,
+    "blend_frames": false
+  }
+]

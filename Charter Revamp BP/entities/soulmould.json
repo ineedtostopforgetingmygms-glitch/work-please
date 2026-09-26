@@ -1,0 +1,286 @@
+{
+    "format_version": "1.21.110",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "charter:soulmould",
+            "spawn_category": "creature",
+            "is_spawnable": true,
+            "is_summonable": true,
+            "properties": {
+                "soulmould:sit": {
+                    "type": "bool",
+                    "client_sync": false,
+                    "default": false
+                },
+                "soulmould:fly": {
+                    "type": "bool",
+                    "client_sync": false,
+                    "default": false
+                },
+                "soulmould:behavior": {
+                    "type": "enum",
+                    "values": [
+                        "default",
+                        "big",
+                        "cute",
+                        "grumpy",
+                        "mad",
+                        "puglin",
+                        "sad"
+                    ],
+                    "default": "default",
+                    "client_sync": true
+                }
+            }
+        },
+        "component_groups": {
+            "soulmould:zero_movement": {
+                "minecraft:movement": {
+                    "value": 0.0
+                }
+            },
+            "soulmould:dormant": {
+                "minecraft:is_stunned": {},
+                "minecraft:is_collidable": {},
+                "minecraft:sittable": {},
+                "minecraft:pushable": {
+                    "is_pushable": false,
+                    "is_pushable_by_piston": false
+                },
+                "minecraft:behavior.hurt_by_target": {
+                    "priority": 0,
+                    "event": "soulmould:activate",
+                    "target": "self"
+                },
+                "minecraft:on_target_acquired": {
+                    "event": "soulmould:activate",
+                    "target": "self"
+                }
+            },
+            "soulmould:activate": {
+                "minecraft:skin_id": {
+                    "value": 1
+                },
+                "minecraft:timer": {
+                    "time": 3,
+                    "looping": true,
+                    "time_down_event": {
+                        "event": "soulmould:attack_mode",
+                        "target": "self"
+                    }
+                }
+            },
+            "soulmould:attack_mode": {
+                "minecraft:behavior.look_at_target": {
+                    "priority": 6
+                },
+                "minecraft:movement": {
+                    "value": 0.2
+                },
+                "minecraft:behavior.look_at_player": {
+                    "priority": 6,
+                    "look_distance": 250.0,
+                    "probability": 1.0
+                },
+                "minecraft:behavior.nearest_attackable_target": {
+                    "priority": 5,
+                    "reselect_targets": true,
+                    "must_see": false,
+                    "entity_types": [
+                        {
+                            "filters": {
+                                "any_of": [
+                                    {
+                                        "test": "is_family",
+                                        "subject": "other",
+                                        "value": "enderman"
+                                    },
+                                    {
+                                        "test": "is_family",
+                                        "subject": "other",
+                                        "value": "iron_golem"
+                                    }
+                                ]
+                            },
+                            "max_dist": 250
+                        }
+                    ]
+                },
+                "minecraft:behavior.move_towards_target": {
+                    "priority": 3,
+                    "speed_multiplier": 0.5,
+                    "within_radius": 250
+                },
+                "minecraft:on_target_escape": {
+                    "event": "soulmould:return_home",
+                    "target": "self"
+                }
+            },
+            "soulmould:lunge": {},
+            "soulmould:disengaged": {},
+            "soulmould:return_home": {
+                "minecraft:behavior.move_towards_home_restriction": {
+                    "priority": 4
+                }
+            },
+            "soulmould:search_mode": {
+                "minecraft:suspect_tracking": {}
+            },
+            "soulmould:follow_owner": {
+                "minecraft:behavior.owner_hurt_by_target": {
+                    "priority": 1
+                },
+                "minecraft:behavior.owner_hurt_target": {
+                    "priority": 2
+                },
+                "minecraft:behavior.follow_owner": {
+                    "priority": 3,
+                    "speed_multiplier": 1.2,
+                    "start_distance": 5,
+                    "stop_distance": 2
+                },
+                "minecraft:movement": {
+                    "value": 0.2
+                },
+                "minecraft:navigation.walk": {
+                    "can_path_over_water": true,
+                    "avoid_water": false,
+                    "avoid_damage_blocks": true
+                }
+            }
+        },
+        "components": {
+            "minecraft:type_family": {
+                "family": [
+                    "soulmould",
+                    "inanimate"
+                ]
+            },
+            "minecraft:tick_world": {
+                "distance_to_players": 128,
+                "never_despawn": true,
+                "radius": 6
+            },
+            "minecraft:health": {
+                "value": 60,
+                "max": 60
+            },
+            "minecraft:collision_box": {
+                "width": 1,
+                "height": 2.85
+            },
+            "minecraft:attack": {
+                "damage": 15
+            },
+            "minecraft:knockback_resistance": {
+                "value": 1.0
+            },
+            "minecraft:behavior.stay_while_sitting": {
+                "priority": 0
+            },
+            "minecraft:behavior.melee_box_attack": {
+                "priority": 4
+            },
+            "minecraft:navigation.walk": {
+                "can_path_over_water": true,
+                "avoid_water": true,
+                "avoid_damage_blocks": true
+            },
+            "minecraft:physics": {
+                "has_collision": true
+            },
+            "minecraft:tameable": {
+                "probability": 1
+            },
+            "minecraft:is_tamed": {},
+            "minecraft:movement.basic": {},
+            "minecraft:jump.static": {},
+            "minecraft:balloonable": {},
+            "minecraft:body_rotation_always_follows_head": {},
+            "minecraft:conditional_bandwidth_optimization": {}
+        },
+        "events": {
+            "minecraft:entity_spawned": {
+                "add": {
+                    "component_groups": [
+                        "soulmould:dormant",
+                        "soulmould:zero_movement"
+                    ]
+                }
+            },
+            "soulmould:attack_mode": {
+                "add": {
+                    "component_groups": [
+                        "soulmould:attack_mode"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "soulmould:dormant",
+                        "soulmould:zero_movement",
+                        "soulmould:activate"
+                    ]
+                }
+            },
+            "soulmould:activate": {
+                "add": {
+                    "component_groups": [
+                        "soulmould:activate"
+                    ]
+                }
+            },
+            "soulmould:disengaged": {
+                "add": {
+                    "component_groups": [
+                        "soulmould:disengaged"
+                    ]
+                }
+            },
+            "soulmould:return_home": {
+                "add": {
+                    "component_groups": [
+                        "soulmould:return_home"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "soulmould:follow_owner",
+                        "soulmould:zero_movement"
+                    ]
+                }
+            },
+            "soulmould:follow_owner": {
+                "add": {
+                    "component_groups": [
+                        "soulmould:follow_owner"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "soulmould:zero_movement",
+                        "soulmould:attack_mode",
+                        "soulmould:return_home",
+                        "soulmould:search_mode",
+                        "soulmould:disengaged"
+                    ]
+                }
+            },
+            "soulmould:search_mode": {
+                "add": {
+                    "component_groups": [
+                        "soulmould:search_mode"
+                    ]
+                },
+                "remove": {
+                    "component_groups": [
+                        "soulmould:disengaged",
+                        "soulmould:attack_mode",
+                        "soulmould:follow_owner",
+                        "soulmould:return_home",
+                        "soulmould:zero_movement"
+                    ]
+                }
+            }
+        }
+    }
+}

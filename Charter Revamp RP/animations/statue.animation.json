@@ -1,0 +1,54 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.statue.action": {
+			"loop": true,
+			"bones": {
+				"waist": {
+					"rotation": ["-q.property('statue:waist_x')", "-q.property('statue:waist_y')", "q.property('statue:waist_z')"]
+				},
+				"head": {
+					"relative_to": {
+						"rotation": "entity"
+					},
+					"rotation": ["-q.property('statue:head_x')", "-q.property('statue:head_y')", "q.property('statue:head_z')"],
+					"scale": "q.property('statue:head_scale') ? 0 : 1"
+				},
+				"leftArm": {
+					"rotation": ["-q.property('statue:leftarm_x')", "-q.property('statue:leftarm_y')", "q.property('statue:leftarm_z')"],
+					"scale": "q.property('statue:leftarm_scale') ? 0 : 1"
+				},
+				"rightArm": {
+					"rotation": ["-q.property('statue:rightarm_x')", "-q.property('statue:rightarm_y')", "q.property('statue:rightarm_z')"],
+					"scale": "q.property('statue:rightarm_scale') ? 0 : 1"
+				},
+				"rightLeg": {
+					"rotation": ["-q.property('statue:rightleg_x')", "-q.property('statue:rightleg_y')", "q.property('statue:rightleg_z')"],
+					"scale": "1+q.property('statue:rightleg_scale')"
+				},
+				"leftLeg": {
+					"rotation": ["-q.property('statue:leftleg_x')", "-q.property('statue:leftleg_y')", "q.property('statue:leftleg_z')"],
+					"scale": "1+q.property('statue:leftleg_scale')"
+				},
+				"hat": {
+					"scale": "q.property('statue:layer') ? 0 : 1"
+				},
+				"leftSleeve": {
+					"scale": "q.property('statue:layer') ? 0 : 1"
+				},
+				"rightSleeve": {
+					"scale": "q.property('statue:layer') ? 0 : 1"
+				},
+				"jacket": {
+					"scale": "q.property('statue:layer') ? 0 : 1"
+				},
+				"rightPants": {
+					"scale": "q.property('statue:layer') ? 0 : 1"
+				},
+				"leftPants": {
+					"scale": "q.property('statue:layer') ? 0 : 1"
+				}
+			}
+		}
+	}
+}

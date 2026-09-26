@@ -1,0 +1,42 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.bundle": {
+      "arrays": {
+        "textures": {
+          "Array.bundle_variants": [ // For Something Else in the future
+            "Texture.bundle",
+            "Texture.bundle_black",
+            "Texture.bundle_blue",
+            "Texture.bundle_brown",
+            "Texture.bundle_cyan",
+            "Texture.bundle_gray",
+            "Texture.bundle_green",
+            "Texture.bundle_light_blue",
+            "Texture.bundle_light_gray",
+            "Texture.bundle_lime",
+            "Texture.bundle_magenta",
+            "Texture.bundle_orange",
+            "Texture.bundle_pink",
+            "Texture.bundle_purple",
+            "Texture.bundle_red",
+            "Texture.bundle_white",
+            "Texture.bundle_yellow"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {"*": "Material.alphatest"}
+      ],
+      "textures": [
+        "q.property('raven:bundle_variant') == 0 ? Texture.bundle : q.property('raven:bundle_variant') == 1 ? Texture.bundle_black : q.property('raven:bundle_variant') == 2 ? Texture.bundle_blue : q.property('raven:bundle_variant') == 3 ? Texture.bundle_brown : q.property('raven:bundle_variant') == 4 ? Texture.bundle_cyan : q.property('raven:bundle_variant') == 5 ? Texture.bundle_gray : q.property('raven:bundle_variant') == 6 ? Texture.bundle_green : q.property('raven:bundle_variant') == 7 ? Texture.bundle_light_blue : q.property('raven:bundle_variant') == 8 ? Texture.bundle_light_gray : q.property('raven:bundle_variant') == 9 ? Texture.bundle_lime : q.property('raven:bundle_variant') == 10 ? Texture.bundle_magenta : q.property('raven:bundle_variant') == 11 ? Texture.bundle_orange : q.property('raven:bundle_variant') == 12 ? Texture.bundle_pink : q.property('raven:bundle_variant') == 13 ? Texture.bundle_purple : q.property('raven:bundle_variant') == 14 ? Texture.bundle_red : q.property('raven:bundle_variant') == 15 ? Texture.bundle_white : q.property('raven:bundle_variant') == 16 ? Texture.bundle_yellow : Texture.bundle"
+      ],
+      "part_visibility": [
+        {"*": false},
+        {"bundle": true}
+
+      ]
+    }
+  }
+}

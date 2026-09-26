@@ -1,0 +1,41 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "charter:soulmould",
+      "materials": {
+        "default": "entity_alphatest",
+        "eyes": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/Charter/entity/mould/soulmould",
+        "eyes": "textures/Charter/entity/mould/eyes"
+      },
+      "geometry": {
+        "default": "geometry.soulmould"
+      },
+      "scripts": {
+        "animate": [
+          "behavior"
+        ]
+      },
+      "animations": {
+        "dormant": "animation.soulmould.dormant",
+        "activate": "animation.soulmould.activate",
+        "walk": "animation.soulmould.walk",
+        "idle": "animation.soulmould.idle",
+        "attack": "animation.soulmould.attack",
+        "behavior": "controller.animation.soulmould.behavior"
+      },
+      "render_controllers": [
+        "controller.render.soulmould_eyes",
+        "controller.render.soulmould"
+      ],
+      "sound_effects": {
+        "soulmould_attack_1": "Soulmould_Attack_1",
+        "soulmould_attack_2": "Soulmould_Attack_2",
+        "soulmould_attack_3": "Soulmould_Attack_3"
+      }
+    }
+  }
+}

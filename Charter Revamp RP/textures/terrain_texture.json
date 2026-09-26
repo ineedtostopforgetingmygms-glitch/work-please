@@ -1,0 +1,20 @@
+{
+	"num_mip_levels": 4,
+	"padding": 8,
+	"texture_data": {
+		"charter:alex": {"textures": ["textures/entity/alex"]},
+		"charter:steve": {"textures": ["textures/entity/steve"]},
+		"pawn": {"textures": ["textures/Charter/blocks/pawn"]},
+		"pawn_lit": {"textures": ["textures/Charter/blocks/pawn_lit"]},
+		"merchant_simulacrum": {"textures": ["textures/Charter/blocks/merchant_simulacrum"]},
+		"charter_stone": {"textures": ["textures/Charter/blocks/charter_stone"]},
+		"light_bottom": {"textures": ["textures/Charter/blocks/light_bottom"]},
+		"light_top": {"textures": ["textures/Charter/blocks/light_top"]},
+		"soullight": {"textures": ["textures/Charter/blocks/soullight"]},
+		"torchlight": {"textures": ["textures/Charter/blocks/torchlight"]},
+		"suspicious_dirt_1": {"textures": ["textures/Charter/block/ssuspicious_dirt_1"]},
+		"suspicious_dirt_2": {"textures": ["textures/Charter/blocks/suspicious_dirt_2"]},
+		"suspicious_dirt_3": {"textures": ["textures/Charter/blocks/suspicious_dirt_3"]},
+		"suspicious_dirt_4": {"textures": ["textures/Charter/blocks/suspicious_dirt_4"]}
+	}
+}

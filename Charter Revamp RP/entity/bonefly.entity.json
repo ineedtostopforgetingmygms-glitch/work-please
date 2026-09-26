@@ -1,0 +1,37 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "charter:bonefly",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/Charter/entity/bonefly/bonefly"
+      },
+      "geometry": {
+        "default": "geometry.bonefly"
+      },
+      "scripts": {
+        "animate": [
+          "behavior",
+          "walk_behavior"
+        ]
+      },
+      "animations": {
+        "idleFly": "animation.bonefly.idleFly",
+        "stab": "animation.bonefly.stab",
+        "stabIdle": "animation.bonefly.stabIdle",
+        "idleDormant": "animation.bonefly.idleDormant",
+        "hurt": "animation.bonefly.hurt",
+        "idleGround": "animation.bonefly.idleGround",
+        "walkGround": "animation.bonefly.walkGround",
+        "behavior": "controller.animation.bonefly.behavior",
+        "walk_behavior": "controller.animation.bonefly.walk_behavior"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

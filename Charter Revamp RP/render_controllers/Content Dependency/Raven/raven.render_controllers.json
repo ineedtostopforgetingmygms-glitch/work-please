@@ -1,0 +1,31 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.raven": {
+      "arrays": {
+        "textures": {
+          "Array.raven_variants": [
+            "Texture.black_raven",
+            "Texture.white_raven",
+            "Texture.blood_raven",
+            "Texture.emerald_raven",
+            "Texture.orange_raven",
+            "Texture.blue_raven",
+            "Texture.purple_raven"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {"*": "Material.default"}
+      ],
+      "textures": [
+        "query.get_name == 'Yoda' ? Texture.yoda : array.raven_variants[query.variant]"
+      ],
+      "part_visibility": [
+        {"*": true},
+        {"bundle": false}
+      ]
+    }
+  }
+}

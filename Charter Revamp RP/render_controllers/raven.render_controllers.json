@@ -1,0 +1,27 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.charter_raven": {
+      "arrays": {
+        "textures": {
+          "Array.raven_variants": [
+            "Texture.raven_albino",
+            "Texture.raven_dark",
+            "Texture.raven_sea_green",
+            "Texture.raven_three_eyed"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {"*": "Material.entity_alphatest"}
+      ],
+      "textures": [
+        "array.raven_variants[query.variant]"
+      ],
+      "part_visibility": [
+        {"*": true}
+      ]
+    }
+  }
+}

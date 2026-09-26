@@ -1,0 +1,21 @@
+{
+    "format_version": "1.21.130",
+    "minecraft:item": {
+        "description": {
+            "identifier": "charter:lesser_divinity_shard",
+            "menu_category": {
+                "category": "equipment"
+            }
+        },
+        "components": {
+            "minecraft:max_stack_size": 1,
+            "minecraft:icon": "lesser_divinity_chunk",
+            "minecraft:display_name": {
+                "value": "§eLesser Divinity Shard"
+            },
+            "minecraft:fire_resistant": {
+                "value": true
+            }
+        }
+    }
+}

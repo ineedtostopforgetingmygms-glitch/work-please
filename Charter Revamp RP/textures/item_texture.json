@@ -1,0 +1,58 @@
+{
+	"texture_data": {
+		"dusks_epitaph": {
+			"textures": "textures/Charter/items/dusks_epitaph"
+		},
+		"contract_signed": {
+			"textures": "textures/Charter/items/contract_signed"
+		},
+		"contract_unsigned": {
+			"textures": "textures/Charter/items/contract_unsigned"
+		},
+		"lesser_divinity": {
+			"textures": "textures/Charter/items/lesser_divinity"
+		},
+		"lesser_divinity_broken": {
+			"textures": "textures/Charter/items/lesser_divinity_broken"
+		},
+		"merchant_effigy": {
+			"textures": "textures/Charter/items/merchant_effigy"
+		},
+		"pawn": {
+			"textures": "textures/Charter/items/pawn"
+		},
+		"charter_eye": {
+			"textures": "textures/Charter/items/charter_eye"
+		},
+		"hoarder_maw": {
+			"textures": "textures/Charter/items/hoarder_maw"
+		},
+		"gilded_eye": {
+			"textures": "textures/Charter/items/gilded_eye"
+		},
+		"charter_stone": {
+			"textures": "textures/Charter/items/charter_stone"
+		},
+		"advance_gauntlet_gui": {
+			"textures": "textures/Charter/items/advance_gauntlet_gui"
+		},
+		"bastion_gauntlet_gui": {
+			"textures": "textures/Charter/items/bastion_gauntlet_gui"
+		},
+		"bonefly_skull": {
+			"textures": "textures/Charter/items/bonefly_skull"
+		},
+		"glaive": {
+			"textures": "textures/Charter/items/glaive_small"
+		},
+		"lesser_divinity_chunk": {
+			"textures": "textures/Charter/items/lesser_divinity_chunk"
+		},
+		"soulmould": {
+			"textures": "textures/Charter/items/soulmould"
+		},
+		"soultrap_effigy": {
+			"textures": "textures/Charter/items/soultrap_effigy"
+		}
+	}
+}

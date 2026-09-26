@@ -1,0 +1,32 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.hearts_amarite": {
+      "geometry": "Geometry.effect",
+      "materials": [{"*": "Material.effect"}],
+      "textures": ["Texture.budding_effect"],
+      "part_visibility": [
+        { "*": true }
+      ],
+      "overlay_color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "is_hurt_color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "on_fire_color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 0
+      },
+      "ignore_lighting": true
+    }
+  }
+}

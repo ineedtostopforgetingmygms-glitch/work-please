@@ -1,0 +1,13 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.immune": {
+			"geometry": "Geometry.default",
+			"materials": [{"*": "Material.default"}],
+			"textures": ["Texture.default"],
+      "overlay_color": {},
+      "is_hurt_color": {},
+      "on_fire_color": {}
+		}
+	}
+}

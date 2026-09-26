@@ -1,0 +1,32 @@
+{
+	"format_version": "1.21.70",
+	"minecraft:block": {
+		"description": {
+			"identifier": "charter:arm",
+			"menu_category": {
+				"category": "items"
+			}
+		},
+		"components": {
+			"minecraft:geometry": "geometry.wide_arm_block",
+			"minecraft:material_instances": {
+				"*": {
+					"texture": "charter:steve",
+					"render_method": "blend"
+				}
+			},
+			"minecraft:placement_filter": {
+				"conditions": [
+					{
+						"allowed_faces": [
+							"down"
+						],
+						"block_filter": [
+							"null:null"
+						]
+					}
+				]
+			}
+		}
+	}
+}

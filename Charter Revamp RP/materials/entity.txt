@@ -1,0 +1,84 @@
+{
+  "materials": {
+    "version": "1.0.0",
+    
+    "esp_material": {
+      "+states": [
+        "DisableCulling",
+        "DisableDepthWrite",  // Changed from DisableDepthTest
+        "Blending"
+      ],
+      "depthFunc": "Always",  // Changed from LessEqual
+      "blendSrc": "SourceAlpha",
+      "blendDst": "OneMinusSrcAlpha",
+      "+samplerStates": [
+        {
+          "samplerIndex": 0,
+          "textureFilter": "Point"
+        }
+      ],
+      "msaaSupport": "Both",
+      "renderLayer": "translucent",  // Changed from overlay
+      "vertexShader": "shaders/entity.vertex",
+      "fragmentShader": "shaders/entity.fragment",
+      "vertexFields": [
+        { "field": "Position" },
+        { "field": "Color" },
+        { "field": "UV0" }
+      ],
+      "variants": [
+        {
+          "skinning": {
+            "+defines": [ "USE_SKINNING" ],
+            "vertexFields": [
+              { "field": "Position" },
+              { "field": "BoneId0" },
+              { "field": "BoneWeight0" },
+              { "field": "Color" },
+              { "field": "UV0" }
+            ]
+          }
+        }
+      ]
+    },
+    "mask_material": {
+      "+states": [
+        "DisableCulling",
+        "DisableDepthWrite",  // Changed from DisableDepthTest
+        "Blending"
+      ],
+      "depthFunc": "LessEqual",  // Changed from Always
+      "blendSrc": "SourceAlpha",
+      "blendDst": "OneMinusSrcAlpha",
+      "+samplerStates": [
+        {
+          "samplerIndex": 0,
+          "textureFilter": "Point"
+        }
+      ],
+      "msaaSupport": "Both",
+      "renderLayer": "translucent",  // Changed from overlay
+      "vertexShader": "shaders/entity.vertex",
+      "fragmentShader": "shaders/entity.fragment",
+      "vertexFields": [
+        { "field": "Position" },
+        { "field": "Color" },
+        { "field": "UV0" }
+      ],
+      "variants": [
+        {
+          "skinning": {
+            "+defines": [ "USE_SKINNING" ],
+            "vertexFields": [
+              { "field": "Position" },
+              { "field": "BoneId0" },
+              { "field": "BoneWeight0" },
+              { "field": "Color" },
+              { "field": "UV0" }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

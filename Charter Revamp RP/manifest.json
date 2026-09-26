@@ -1,0 +1,32 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Charter Revamp",
+    "description": "§bVersion: 1.0.0",
+    "uuid": "295165c1-ada6-4229-bf83-28adc7185664",
+    "version": [ 1, 0, 0 ],
+    "min_engine_version": [ 1, 21, 20]
+  },
+  "modules": [
+    {
+      "description": "§bVersion: 1.0.0",
+      "type": "resources",
+      "uuid": "0186450c-aa6e-42cf-ae0f-085e1a4b0fac",
+      "version": [ 1, 0, 0]
+    }
+	],
+  "settings": [
+    {
+      "type": "label",
+      "text": "§l§eCreator: §bBigGamers4u\n\n"
+    },
+    {
+      "type": "label",
+      "text": "[§eLicensed§f] §eAll Domain§f\n\n§f[§eReminder§f]\n§fThis pack supports §l§6Minecraft Version 1.21.90§r and above."
+    },
+    {
+      "type": "label",
+      "text": "§bBigGamers4u §f- §uDiscord\n§fhttps://discord.gg/5s9JuQDASw\n\n§bBigGamers4u §f- §aMCPEDL\n§fhttps://mcpedl.com/user/biggamers4u/\n\n§bBigGamers4u §f- §vCurseForge\n§fhttps://legacy.curseforge.com/members/biggamers4u/\n\n§bBigGamers4u §f- GitHub\n§fhttps://github.com/PigGamers4u\n\n§bBigGamers4u §f- You§4Tube\n§fhttps://www.youtube.com/@BigGamers4u\n\n"
+    }
+  ]
+}
