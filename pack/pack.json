@@ -4,21 +4,21 @@
   "summary": "Screenshot-focused Fabric pack: Hysteria + Insanity horror shaders at full quality, with every performance mod that doesn't touch visuals.",
   "minecraft": "1.21.1",
   "loader": "fabric",
+  "java": 21,
   "fabric_loader": "latest",
   "default_shader": "hysteria-shaders",
 
   "mods": [
     { "slug": "fabric-api",            "why": "Library required by most mods" },
 
+    { "slug": "iris",                  "why": "Shader loader (runs Hysteria / Insanity on top of Sodium). Listed first so its newest stable release decides the Sodium version" },
     { "slug": "sodium",                "why": "Rendering engine rewrite - the biggest FPS win" },
-    { "slug": "iris",                  "why": "Shader loader (runs Hysteria / Insanity on top of Sodium)" },
     { "slug": "lithium",               "why": "Game logic / tick optimisation, no visual changes" },
     { "slug": "ferrite-core",          "why": "Cuts RAM usage" },
     { "slug": "modernfix",             "why": "Faster launch, lower memory, many bug fixes" },
     { "slug": "immediatelyfast",       "why": "Faster immediate-mode rendering (GUI, text, entities)" },
     { "slug": "entityculling",         "why": "Skips rendering entities/block entities you cannot see" },
     { "slug": "dynamic-fps",           "why": "Throttles FPS when the window is unfocused / minimised" },
-    { "slug": "c2me-fabric",           "why": "Multi-threaded chunk generation (fast pre-gen + DH LODs)", "optional": true },
     { "slug": "badoptimizations",      "why": "Micro-optimisations for lightmap, sky and entity data", "optional": true },
 
     { "slug": "sodium-extra",          "why": "Extra Sodium toggles (fog, particles, animations)", "optional": true },

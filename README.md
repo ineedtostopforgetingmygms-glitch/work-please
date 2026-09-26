@@ -32,7 +32,7 @@ whole mod list support reliably.
 | Purpose | Mods |
 |---|---|
 | Rendering / FPS | Sodium, Iris, ImmediatelyFast, Entity Culling, BadOptimizations, Dynamic FPS |
-| Logic / memory / loading | Lithium, FerriteCore, ModernFix, C2ME |
+| Logic / memory / loading | Lithium, FerriteCore, ModernFix |
 | Visuals | Distant Horizons (LOD terrain far past render distance), Continuity (connected textures) |
 | Screenshot tools | Freecam, Zoomify, Fabrishot (high-res capture), Flashback (replay + free camera), Chunky (pre-generate a world) |
 | Settings UI | Sodium Extra, Reese's Sodium Options, Mod Menu |
@@ -68,11 +68,21 @@ Distant Horizons render distance or turn it off in its settings.
 python3 scripts/build_mrpack.py        # writes dist/*.mrpack (needs access to api.modrinth.com)
 ```
 
-`scripts/build_mrpack.py` picks the newest compatible Modrinth release of each
-mod and shaderpack for the configured Minecraft version. It pulls in required
-dependencies, fails on declared incompatibilities, and generates
-`config/iris.properties` so the default shader is enabled on first launch.
-Optional mods without a compatible build are skipped with a warning.
+`scripts/build_mrpack.py` resolves each mod on Modrinth for the configured
+Minecraft version and pulls in required dependencies. It reads every
+candidate jar's `fabric.mod.json`, including jars bundled inside other jars,
+and checks its `depends` and `breaks` rules against the mods already chosen.
+The result is a set Fabric Loader will accept.
+- Releases are preferred over betas and alphas.
+- Mods earlier in `pack.json` win conflicts. For example, Iris is listed
+  before Sodium, so the newest *stable* Iris decides which Sodium version is
+  used.
+- Optional mods with no compatible build are skipped with a warning.
+- It generates `config/iris.properties` so the default shader is enabled on
+  first launch.
+
+`scripts/inspect_versions.py <mc> <slug>...` lists recent versions of mods
+along with their dependency rules, which helps when changing pins.
 
 To add or remove mods, or to change the Minecraft version, edit
 [`pack/pack.json`](pack/pack.json). Files in [`pack/overrides/`](pack/overrides)

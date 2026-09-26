@@ -20,6 +20,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from fabric_meta import modules_in_jar, satisfies
+
 ROOT = Path(__file__).resolve().parent.parent
 PACK_DIR = ROOT / "pack"
 API = "https://api.modrinth.com/v2"
@@ -49,15 +51,17 @@ def q(value):
     return urllib.parse.quote(json.dumps(value))
 
 
+def order_candidates(versions):
+    """Newest release first, then betas, then alphas (API lists newest first)."""
+    rank = {"release": 0, "beta": 1, "alpha": 2}
+    return sorted(versions, key=lambda v: rank.get(v["version_type"], 3))
+
+
 def pick_version(versions, game_version=None):
-    """Prefer the newest release, then beta, then alpha."""
     if game_version:
         versions = [v for v in versions if game_version in v["game_versions"]]
-    for vtype in ("release", "beta", "alpha"):
-        for v in versions:  # API returns newest first
-            if v["version_type"] == vtype:
-                return v
-    return None
+    ordered = order_candidates(versions)
+    return ordered[0] if ordered else None
 
 
 def primary_file(version):
@@ -65,12 +69,31 @@ def primary_file(version):
     return next((f for f in files if f["primary"]), files[0])
 
 
+def download(url):
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        return resp.read()
+
+
 class Resolver:
-    def __init__(self, cfg):
+    """Greedy resolver: mods earlier in pack.json win version conflicts.
+
+    Each candidate jar's fabric.mod.json (plus nested jars) is checked against
+    everything already chosen, so the result is a set Fabric Loader accepts.
+    """
+
+    MAX_CANDIDATES = 40
+
+    def __init__(self, cfg, loader_version):
         self.mc = cfg["minecraft"]
         self.loader = cfg["loader"]
+        self.env = {"minecraft": self.mc, "java": str(cfg.get("java", 21)),
+                    "fabricloader": loader_version, "fabric-loader": loader_version}
+        self.builtin = set(self.env) | {"mixinextras"}  # bundled with Fabric Loader
         self.projects = {}   # project_id -> project json
         self.chosen = {}     # project_id -> (kind, version)
+        self.modules = []    # Fabric modules of every chosen mod
+        self.provided = {}   # mod id -> version
         self.warnings = []
 
     def project(self, id_or_slug):
@@ -79,10 +102,41 @@ class Resolver:
             self.projects[proj["id"]] = proj
         return proj
 
+    def _lookup(self, mod_id, extra):
+        return self.env.get(mod_id) or self.provided.get(mod_id) or extra.get(mod_id)
+
+    def conflicts(self, mods):
+        """Return a reason string if these modules clash with the chosen set."""
+        new_ids = {i: m.version for m in mods for i in m.ids}
+        for m in mods:
+            for dep, pred in m.depends.items():
+                have = self._lookup(dep, new_ids)
+                if have is not None and not satisfies(have, pred):
+                    return f"{m.id} needs {dep} {pred}, have {have}"
+            for dep, pred in m.breaks.items():
+                have = self.provided.get(dep) or new_ids.get(dep)
+                if have is not None and dep not in m.ids and satisfies(have, pred):
+                    return f"{m.id} breaks {dep} {pred}"
+        for c in self.modules:
+            for dep, pred in c.depends.items():
+                if dep in new_ids and dep not in self.provided and not satisfies(new_ids[dep], pred):
+                    return f"{c.id} needs {dep} {pred}, candidate has {new_ids[dep]}"
+            for dep, pred in c.breaks.items():
+                if dep in new_ids and dep not in self.provided and satisfies(new_ids[dep], pred):
+                    return f"{c.id} breaks {dep} {pred}"
+        return None
+
     def mod_version(self, project_id):
         url = (f"{API}/project/{project_id}/version"
                f"?loaders={q([self.loader])}&game_versions={q([self.mc])}")
-        return pick_version(get_json(url) or [])
+        rejected = []
+        for v in order_candidates(get_json(url) or [])[:self.MAX_CANDIDATES]:
+            mods = modules_in_jar(download(primary_file(v)["url"]))
+            reason = self.conflicts(mods)
+            if reason is None:
+                return v, mods, rejected
+            rejected.append(f"{v['version_number']}: {reason}")
+        return None, [], rejected
 
     def shader_version(self, project_id):
         versions = get_json(f"{API}/project/{project_id}/version") or []
@@ -97,11 +151,21 @@ class Resolver:
             return self._miss(f"{kind} '{slug}' not found on Modrinth", optional)
         if proj["id"] in self.chosen:
             return True
-        version = (self.shader_version if kind == "shader" else self.mod_version)(proj["id"])
+        if kind == "shader":
+            version, mods, rejected = self.shader_version(proj["id"]), [], []
+        else:
+            version, mods, rejected = self.mod_version(proj["id"])
+        for r in rejected[:3]:
+            print(f"      skip {proj['slug']} {r}")
         if not version:
             return self._miss(
-                f"{kind} '{slug}' has no {self.loader} build for {self.mc}", optional)
+                f"{kind} '{proj['slug']}' has no compatible {self.loader} build for {self.mc}",
+                optional)
         self.chosen[proj["id"]] = (kind, version)
+        self.modules.extend(mods)
+        for m in mods:
+            for i in m.ids:
+                self.provided.setdefault(i, m.version)
         tag = f" (dependency of {reason})" if reason else ""
         print(f"  + {proj['slug']:<24} {version['version_number']}{tag}")
         if kind == "mod":
@@ -130,13 +194,28 @@ class Resolver:
             return False
         raise SystemExit(f"ERROR: {msg}")
 
-    def check_incompatibilities(self):
+    def validate(self):
+        """Final pass: every Fabric dependency present and satisfied, no breaks."""
+        errors = []
+        for m in self.modules:
+            for dep, pred in m.depends.items():
+                have = self._lookup(dep, {})
+                if have is None:
+                    if dep not in self.builtin:
+                        errors.append(f"{m.id} requires missing mod '{dep}' {pred}")
+                elif not satisfies(have, pred):
+                    errors.append(f"{m.id} requires {dep} {pred}, have {have}")
+            for dep, pred in m.breaks.items():
+                have = self.provided.get(dep)
+                if have is not None and dep not in m.ids and satisfies(have, pred):
+                    errors.append(f"{m.id} breaks {dep} {have}")
         for pid, (_, version) in self.chosen.items():
             for dep in version["dependencies"]:
                 if dep["dependency_type"] == "incompatible" and dep.get("project_id") in self.chosen:
-                    a = self.projects[pid]["slug"]
-                    b = self.projects[dep["project_id"]]["slug"]
-                    raise SystemExit(f"ERROR: {a} declares itself incompatible with {b}")
+                    errors.append(f"{self.projects[pid]['slug']} is incompatible with "
+                                  f"{self.projects[dep['project_id']]['slug']}")
+        if errors:
+            raise SystemExit("ERROR: unresolvable mod set:\n  " + "\n  ".join(errors))
 
 
 def env_for(kind, project):
@@ -156,7 +235,8 @@ def fabric_loader_version(pinned):
 
 def build(out_dir):
     cfg = json.loads((PACK_DIR / "pack.json").read_text())
-    res = Resolver(cfg)
+    loader_ver = fabric_loader_version(cfg.get("fabric_loader"))
+    res = Resolver(cfg, loader_ver)
 
     print(f"Resolving for Minecraft {cfg['minecraft']} / {cfg['loader']}")
     print("Mods:")
@@ -165,7 +245,7 @@ def build(out_dir):
     print("Shaders:")
     for s in cfg["shaders"]:
         res.add(s["slug"], "shader", s.get("optional", False))
-    res.check_incompatibilities()
+    res.validate()
 
     files, shader_files = [], {}
     for pid, (kind, version) in res.chosen.items():
@@ -183,7 +263,6 @@ def build(out_dir):
             shader_files[proj["slug"]] = f["filename"]
     files.sort(key=lambda x: x["path"].lower())
 
-    loader_ver = fabric_loader_version(cfg.get("fabric_loader"))
     index = {
         "formatVersion": 1,
         "game": "minecraft",
