@@ -1,69 +1,91 @@
 {
 	"format_version": "1.19.0",
 	"animation_controllers": {
-		"controller.animation.bonefly.walk_behavior": {
-			"initial_state": "default",
+		"controller.animation.bonefly.wing": {
+			"initial_state": "idleGround",
 			"states": {
-				"default": {
+				"idleGround": {
 					"animations": ["idleGround"],
 					"transitions": [
+						{"dormant": "q.property('bonefly:dormant')"},
 						{"idleFly": "q.property('bonefly:airborne')"},
-						{"walking": "q.is_moving"},
-						{"idleDormant": "q.is_sitting || q.property('bonefly:sit')"}
+						{"walkGround": "q.is_moving"}
+					],
+					"blend_transition": 0.2
+				},
+				"walkGround": {
+					"animations": ["walkGround"],
+					"transitions": [
+						{"dormant": "q.property('bonefly:dormant')"},
+						{"idleFly": "q.property('bonefly:airborne')"},
+						{"idleGround": "!q.is_moving"}
 					],
 					"blend_transition": 0.2
 				},
 				"idleFly": {
 					"animations": ["idleFly"],
 					"transitions": [
-						{"default": "!q.property('bonefly:airborne')"}
+						{"dormant": "q.property('bonefly:dormant')"},
+						{"idleGround": "!q.property('bonefly:airborne')"}
 					],
 					"blend_transition": 0.2
 				},
-				"walking": {
-					"animations": ["walkGround"],
+				"dormant": {
 					"transitions": [
-						{"idleFly": "q.property('bonefly:airborne')"},
-						{"default": "!q.is_moving"}
+						{"idleGround": "!q.property('bonefly:dormant')"}
+					],
+					"blend_transition": 0.2
+				}
+			}
+		},
+		"controller.animation.bonefly.idle": {
+			"initial_state": "none",
+			"states": {
+				"none": {
+					"transitions": [
+						{"idleDormant": "q.property('bonefly:dormant')"},
+						{"hurt": "q.hurt_time > 0"}
 					],
 					"blend_transition": 0.2
 				},
 				"idleDormant": {
 					"animations": ["idleDormant"],
 					"transitions": [
-						{"idleFly": "q.property('bonefly:airborne')"},
-						{"default": "!q.is_sitting && !q.property('bonefly:sit')"}
-					],
-					"blend_transition": 0.2
-				}
-			}
-		},
-		"controller.animation.bonefly.behavior": {
-			"states": {
-				"default": {
-					"animations": [],
-					"transitions": [
-						{"attack": "v.attack_time"},
-						{"hurt": "q.hurt_time > 0.1"}
-					],
-					"blend_transition": 0.2
-				},
-				"attack": {
-					"animations": [
-						{"stab": "v.attack_time && q.is_moving"},
-						{"stabIdle": "v.attack_time && !q.is_moving"}
-					],
-					"transitions": [
-						{"default": "!v.attack_time"},
-						{"hurt": "q.hurt_time > 0.1"}
+						{"none": "!q.property('bonefly:dormant')"}
 					],
 					"blend_transition": 0.2
 				},
 				"hurt": {
 					"animations": ["hurt"],
 					"transitions": [
-						{"attack": "v.attack_time"},
-						{"default": "q.hurt_time < 0.1"}
+						{"idleDormant": "q.property('bonefly:dormant')"},
+						{"none": "q.hurt_time <= 0"}
+					],
+					"blend_transition": 0.2
+				}
+			}
+		},
+		"controller.animation.bonefly.stab": {
+			"initial_state": "none",
+			"states": {
+				"none": {
+					"transitions": [
+						{"stab": "q.property('bonefly:action_state') == 1"},
+						{"stabIdle": "q.property('bonefly:action_state') == 2"}
+					]
+				},
+				"stab": {
+					"animations": ["stab"],
+					"transitions": [
+						{"stabIdle": "q.property('bonefly:action_state') == 2"},
+						{"none": "q.property('bonefly:action_state') == 0"}
+					]
+				},
+				"stabIdle": {
+					"animations": ["stabIdle"],
+					"transitions": [
+						{"stab": "q.property('bonefly:action_state') == 1"},
+						{"none": "q.property('bonefly:action_state') == 0"}
 					],
 					"blend_transition": 0.2
 				}

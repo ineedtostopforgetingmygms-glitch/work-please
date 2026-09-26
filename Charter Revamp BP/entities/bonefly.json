@@ -6,22 +6,40 @@
             "spawn_category": "creature",
             "is_spawnable": true,
             "is_summonable": true,
+            // The state below is driven by scripts/Charter/entities/bonefly/bonefly.js.
+            // Properties persist with the entity, so dormancy, the stab state and its
+            // timer survive unloading, like the NBT fields of the original mod.
             "properties": {
-                "bonefly:sit": {
+                "bonefly:dormant": {
                     "type": "bool",
                     "client_sync": true,
                     "default": false
                 },
-                // set by scripts/Charter/entities/bonefly/bonefly.js, drives the fly/ground animations
+                // 0 = normal, 1 = stabbing, 2 = stab finished (holding)
+                "bonefly:action_state": {
+                    "type": "int",
+                    "range": [0, 2],
+                    "client_sync": true,
+                    "default": 0
+                },
+                "bonefly:stab_ticks": {
+                    "type": "int",
+                    "range": [0, 10],
+                    "client_sync": false,
+                    "default": 0
+                },
+                // true when there is no solid block within 2 blocks below it
                 "bonefly:airborne": {
                     "type": "bool",
                     "client_sync": true,
                     "default": false
                 },
-                "bonefly:fly": {
-                    "type": "bool",
+                // which movement group is active: -1 = none yet, 0 = ground, 1 = air, 2 = dormant
+                "bonefly:move_mode": {
+                    "type": "int",
+                    "range": [-1, 2],
                     "client_sync": false,
-                    "default": false
+                    "default": -1
                 },
                 "bonefly:behavior": {
                     "type": "enum",
@@ -40,83 +58,96 @@
             }
         },
         "component_groups": {
-            "bonefly:wild": {
-                "minecraft:tameable": {
-                    "probability": 0.25,
-                    "tame_items": "bone",
-                    "tame_event": {
-                        "event": "minecraft:on_tame",
-                        "target": "self"
-                    }
-                }
-            },
-            "bonefly:wild_fly": {
-                "minecraft:can_fly": {},
-                "minecraft:physics": {
-                    "has_gravity": false,
-                    "has_collision": true
-                },
-                "minecraft:flying_speed": {
-                    "value": 0.088
-                }
-            },
-            "bonefly:wild_ground": {
+            // ground mode: ordinary gravity-bound movement at the 0.32 movement speed
+            "bonefly:ground": {
                 "minecraft:physics": {
                     "has_gravity": true,
                     "has_collision": true
                 },
                 "minecraft:movement": {
-                    "value": 0.3
-                }
-            },
-            "bonefly:wild_angry": {},
-            "bonefly:dormant": {},
-            "bonefly:collision": {
-                "minecraft:is_collidable": {},
-                "minecraft:physics": {
-                    "has_collision": true
-                }
-            },
-            "bonefly:tamed": {
-                "minecraft:is_tamed": {},
-                // only once tamed, so feeding a bone to a hurt wild bonefly tames it instead of healing it
-                "minecraft:healable": {
-                    "items": [
-                        {
-                            "item": "bone",
-                            "heal_amount": 6
-                        },
-                        {
-                            "item": "bone_block",
-                            "heal_amount": 16
-                        }
-                    ]
+                    "value": 0.32
                 },
-                "minecraft:rideable": {
-                    "seat_count": 1,
-                    "crouching_skip_interact": true,
-                    "on_rider_enter_event": "bonefly:ridding",
-                    "on_rider_exit_event": "bonefly:not_riding",
-                    "family_types": [
-                        "player"
-                    ],
-                    "interact_text": "action.interact.ride.bonefly",
-                    "seats": {
-                        "position": [
-                            0,
-                            2.3,
-                            0.6
-                        ]
-                    }
+                // keeps the ground:air speed ratio of the original (0.32 : 0.40)
+                "minecraft:flying_speed": {
+                    "value": 0.0704
                 }
             },
-            // flight controls match the vanilla happy ghast: look to steer, WASD to move, jump to climb
-            "bonefly:ridding": {
+            // air mode: free flight without gravity at the faster flying speed
+            "bonefly:air": {
                 "minecraft:can_fly": {},
                 "minecraft:physics": {
                     "has_gravity": false,
                     "has_collision": true
                 },
+                "minecraft:movement": {
+                    "value": 0.32
+                },
+                "minecraft:flying_speed": {
+                    "value": 0.088
+                }
+            },
+            // dormant: frozen in place, even mid-air
+            "bonefly:dormant": {
+                "minecraft:physics": {
+                    "has_gravity": false,
+                    "has_collision": true
+                },
+                "minecraft:movement": {
+                    "value": 0
+                },
+                "minecraft:flying_speed": {
+                    "value": 0
+                }
+            },
+            "bonefly:tamed": {
+                "minecraft:is_tamed": {},
+                // sneak + interact toggles dormancy; the script checks that it's the owner
+                // and does the toggle (this just makes the interaction exist)
+                "minecraft:interact": {
+                    "interactions": [
+                        {
+                            "on_interact": {
+                                "filters": {
+                                    "test": "is_sneaking",
+                                    "subject": "other",
+                                    "value": true
+                                },
+                                "event": "bonefly:owner_interact",
+                                "target": "self"
+                            },
+                            "interact_text": "action.interact.bonefly.dormant"
+                        }
+                    ]
+                },
+                "minecraft:rideable": {
+                    "seat_count": 2,
+                    "controlling_seat": 0,
+                    "crouching_skip_interact": true,
+                    "on_rider_enter_event": "bonefly:on_rider_enter",
+                    "on_rider_exit_event": "bonefly:on_rider_exit",
+                    // "mob" so the stab can carry creatures; they are only ever added by the script
+                    "family_types": [
+                        "player",
+                        "mob"
+                    ],
+                    "interact_text": "action.interact.ride.bonefly",
+                    "seats": [
+                        {
+                            "min_rider_count": 0,
+                            "max_rider_count": 2,
+                            "position": [0, 2.3, 0.6]
+                        },
+                        // whatever the stab picked up hangs under its body
+                        {
+                            "min_rider_count": 2,
+                            "max_rider_count": 2,
+                            "position": [0, 0.3, 0]
+                        }
+                    ]
+                }
+            },
+            // rider controls: look to steer, WASD to move, jump to climb (like the vanilla happy ghast)
+            "bonefly:ridden": {
                 "minecraft:body_rotation_always_follows_head": {},
                 "minecraft:behavior.player_ride_tamed": {
                     "priority": 1
@@ -127,21 +158,6 @@
                 },
                 "minecraft:vertical_movement_action": {
                     "vertical_velocity": 0.5
-                },
-                "minecraft:flying_speed": {
-                    "value": 0.088
-                },
-                "minecraft:movement": {
-                    "value": 0.3
-                }
-            },
-            "bonefly:gravity": {
-                "minecraft:physics": {
-                    "has_gravity": true,
-                    "has_collision": true
-                },
-                "minecraft:movement": {
-                    "value": 0.3
                 }
             }
         },
@@ -154,12 +170,34 @@
                 ]
             },
             "minecraft:health": {
-                "value": 20,
-                "max": 20
+                "value": 60,
+                "max": 60
+            },
+            "minecraft:attack": {
+                "damage": 8
+            },
+            "minecraft:movement": {
+                "value": 0.32
+            },
+            "minecraft:knockback_resistance": {
+                "value": 1
+            },
+            "minecraft:follow_range": {
+                "value": 24,
+                "max": 24
             },
             "minecraft:collision_box": {
                 "width": 1.8,
                 "height": 2.5
+            },
+            // ownership is assigned by the script (hit it while carrying a Soultrap Effigy),
+            // so there are no tame items
+            "minecraft:tameable": {
+                "probability": 1,
+                "tame_event": {
+                    "event": "minecraft:on_tame",
+                    "target": "self"
+                }
             },
             // it's a flyer: without this, dismounting mid-air drops it to its death
             "minecraft:damage_sensor": {
@@ -168,13 +206,6 @@
                     "deals_damage": "no"
                 }
             },
-            "minecraft:movement": {
-                "value": 0.3
-            },
-            "minecraft:attack": {
-                "damage": 8
-            },
-            // hover is the reason why the bonefly has no gravity when it's pushed
             "minecraft:movement.hover": {},
             "minecraft:navigation.hover": {
                 "can_path_over_water": true,
@@ -209,9 +240,6 @@
                 "breathes_air": true,
                 "breathes_water": true
             },
-            "minecraft:knockback_resistance": {
-                "value": 1
-            },
             "minecraft:pushable": {
                 "is_pushable": true,
                 "is_pushable_by_piston": true
@@ -219,87 +247,82 @@
         },
         "events": {
             "minecraft:entity_spawned": {
-                "add": {
-                    "component_groups": [
-                        "bonefly:wild",
-                        "bonefly:wild_ground"
-                    ]
-                }
+                "trigger": "bonefly:mode_ground"
             },
             "minecraft:on_tame": {
                 "add": {
                     "component_groups": [
-                        "bonefly:tamed",
-                        "bonefly:gravity"
-                    ]
-                },
-                "remove": {
-                    "component_groups": [
-                        "bonefly:wild_ground",
-                        "bonefly:wild_fly",
-                        "bonefly:wild"
+                        "bonefly:tamed"
                     ]
                 }
             },
-            "bonefly:ridding": {
+            "bonefly:owner_interact": {},
+            "bonefly:on_rider_enter": {
                 "add": {
                     "component_groups": [
-                        "bonefly:ridding"
+                        "bonefly:ridden"
                     ]
+                }
+            },
+            "bonefly:on_rider_exit": {
+                "filters": {
+                    "test": "rider_count",
+                    "subject": "self",
+                    "operator": "equals",
+                    "value": 0
                 },
                 "remove": {
                     "component_groups": [
-                        "bonefly:gravity"
+                        "bonefly:ridden"
+                    ]
+                }
+            },
+            "bonefly:mode_ground": {
+                "remove": {
+                    "component_groups": [
+                        "bonefly:air",
+                        "bonefly:dormant"
+                    ]
+                },
+                "add": {
+                    "component_groups": [
+                        "bonefly:ground"
                     ]
                 },
                 "set_property": {
-                    "bonefly:fly": true
+                    "bonefly:move_mode": 0
                 }
             },
-            "bonefly:not_riding": {
-                "add": {
-                    "component_groups": [
-                        "bonefly:gravity"
-                    ]
-                },
+            "bonefly:mode_air": {
                 "remove": {
                     "component_groups": [
-                        "bonefly:ridding"
+                        "bonefly:ground",
+                        "bonefly:dormant"
+                    ]
+                },
+                "add": {
+                    "component_groups": [
+                        "bonefly:air"
                     ]
                 },
                 "set_property": {
-                    "bonefly:fly": false
+                    "bonefly:move_mode": 1
                 }
             },
-            "bonefly:fly": {
-                "add": {
-                    "component_groups": [
-                        "bonefly:wild_fly"
-                    ]
-                },
+            "bonefly:mode_dormant": {
                 "remove": {
                     "component_groups": [
-                        "bonefly:wild_ground"
-                    ]
-                }
-            },
-            "bonefly:ground": {
-                "add": {
-                    "component_groups": [
-                        "bonefly:wild_ground"
+                        "bonefly:ground",
+                        "bonefly:air"
                     ]
                 },
-                "remove": {
-                    "component_groups": [
-                        "bonefly:wild_fly"
-                    ]
-                }
-            },
-            "bonefly:set_dormant": {
                 "add": {
                     "component_groups": [
                         "bonefly:dormant"
                     ]
+                },
+                "set_property": {
+                    "bonefly:move_mode": 2
                 }
             }
         }

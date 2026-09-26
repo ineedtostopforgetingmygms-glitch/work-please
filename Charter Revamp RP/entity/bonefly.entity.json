@@ -14,8 +14,9 @@
       },
       "scripts": {
         "animate": [
-          "behavior",
-          "walk_behavior"
+          "wing_controller",
+          "idle_controller",
+          "stab_controller"
         ]
       },
       "animations": {
@@ -26,8 +27,9 @@
         "hurt": "animation.bonefly.hurt",
         "idleGround": "animation.bonefly.idleGround",
         "walkGround": "animation.bonefly.walkGround",
-        "behavior": "controller.animation.bonefly.behavior",
-        "walk_behavior": "controller.animation.bonefly.walk_behavior"
+        "wing_controller": "controller.animation.bonefly.wing",
+        "idle_controller": "controller.animation.bonefly.idle",
+        "stab_controller": "controller.animation.bonefly.stab"
       },
       "render_controllers": [
         "controller.render.default"

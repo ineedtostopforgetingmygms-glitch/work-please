@@ -4,3 +4,4 @@ content:itemGroup.name.items.food=Content Food
 entity.charter:bonefly.name=Bonefly
 item.spawn_egg.entity.charter:bonefly.name=Bonefly Spawn Egg
 action.interact.ride.bonefly=Ride
+action.interact.bonefly.dormant=Toggle Dormant
