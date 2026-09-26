@@ -18,7 +18,7 @@ To change the price or currency, edit `PRICE` and `MONEY` at the top of `addon/P
 
 Each plot has a lime/red concrete lamp in the middle of its walkway wall (x=13), with a button on both sides of it. Lime means for sale, red means sold.
 
-- **Click, plot for sale:** shows a confirm screen, then buys the plot if the player has at least 10000 `c`. Otherwise it tells them their balance and takes nothing.
+- **Click, plot for sale:** shows a confirm screen, then buys the plot if the player has at least 10000 Coins (the `c` score). Otherwise it tells them their balance and takes nothing.
 - **Click, walkway side:** the owner and added players are teleported in, any time. Everyone else is told who owns it.
 - **Click, plot side:** teleports anyone out to the walkway.
 - **Shift + click (owner only), either side:** opens the plot menu. It has these options:

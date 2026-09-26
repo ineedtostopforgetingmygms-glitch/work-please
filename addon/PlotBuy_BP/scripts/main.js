@@ -16,7 +16,8 @@ import { world, BlockPermutation } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 
 const PRICE = 10000;
-const MONEY = "c";
+const MONEY = "c"; // scoreboard objective that holds the money
+const MONEY_NAME = "Coins"; // what players see in messages
 
 const BUTTON = "minecraft:polished_blackstone_button";
 const FOR_SALE = "minecraft:lime_concrete";
@@ -160,13 +161,13 @@ function buy(player, key, lamp) {
   }
   const balance = getBalance(objective, player);
   if (balance < PRICE) {
-    player.sendMessage(`§cThis plot costs §6${PRICE} ${MONEY}§c. You only have §6${balance} ${MONEY}§c.`);
+    player.sendMessage(`§cThis plot costs §6${PRICE} ${MONEY_NAME}§c. You only have §6${balance} ${MONEY_NAME}§c.`);
     return false;
   }
   objective.addScore(player, -PRICE);
   savePlot(key, { owner: { id: player.id, name: player.name }, members: [], links: [] });
   lamp.setPermutation(BlockPermutation.resolve(SOLD));
-  player.sendMessage(`§aYou bought this plot for §6${PRICE} ${MONEY}§a!`);
+  player.sendMessage(`§aYou bought this plot for §6${PRICE} ${MONEY_NAME}§a!`);
   return true;
 }
 
@@ -174,8 +175,8 @@ async function confirmBuy(player, host, lamp, into) {
   const res = await show(
     new ActionFormData()
       .title("Plot for sale")
-      .body(`Buy this plot for §6${PRICE} ${MONEY}§r?`)
-      .button(`Buy for ${PRICE} ${MONEY}`)
+      .body(`Buy this plot for §6${PRICE} ${MONEY_NAME}§r?`)
+      .button(`Buy for ${PRICE} ${MONEY_NAME}`)
       .button("Cancel"),
     player
   );
