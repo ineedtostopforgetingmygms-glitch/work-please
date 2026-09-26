@@ -1,0 +1,42 @@
+{
+  "name": "Dread Lens",
+  "version": "1.0.0",
+  "summary": "Screenshot-focused Fabric pack: Hysteria + Insanity horror shaders at full quality, with every performance mod that doesn't touch visuals.",
+  "minecraft": "1.21.1",
+  "loader": "fabric",
+  "fabric_loader": "latest",
+  "default_shader": "hysteria-shaders",
+
+  "mods": [
+    { "slug": "fabric-api",            "why": "Library required by most mods" },
+
+    { "slug": "sodium",                "why": "Rendering engine rewrite - the biggest FPS win" },
+    { "slug": "iris",                  "why": "Shader loader (runs Hysteria / Insanity on top of Sodium)" },
+    { "slug": "lithium",               "why": "Game logic / tick optimisation, no visual changes" },
+    { "slug": "ferrite-core",          "why": "Cuts RAM usage" },
+    { "slug": "modernfix",             "why": "Faster launch, lower memory, many bug fixes" },
+    { "slug": "immediatelyfast",       "why": "Faster immediate-mode rendering (GUI, text, entities)" },
+    { "slug": "entityculling",         "why": "Skips rendering entities/block entities you cannot see" },
+    { "slug": "dynamic-fps",           "why": "Throttles FPS when the window is unfocused / minimised" },
+    { "slug": "c2me-fabric",           "why": "Multi-threaded chunk generation (fast pre-gen + DH LODs)", "optional": true },
+    { "slug": "badoptimizations",      "why": "Micro-optimisations for lightmap, sky and entity data", "optional": true },
+
+    { "slug": "sodium-extra",          "why": "Extra Sodium toggles (fog, particles, animations)", "optional": true },
+    { "slug": "reeses-sodium-options", "why": "Cleaner video settings UI", "optional": true },
+    { "slug": "modmenu",               "why": "In-game mod config menu" },
+
+    { "slug": "distanthorizons",       "why": "Huge view distance via LODs - Hysteria supports it natively" },
+    { "slug": "continuity",            "why": "Connected textures (glass, bookshelves...) for nicer shots", "optional": true },
+
+    { "slug": "chunky",                "why": "Pre-generate the area you want to shoot so it's fully loaded", "optional": true },
+    { "slug": "freecam",               "why": "Detach the camera to frame shots anywhere", "optional": true },
+    { "slug": "zoomify",               "why": "Smooth zoom for telephoto framing", "optional": true },
+    { "slug": "fabrishot",             "why": "Render screenshots at custom resolutions (4K/8K) independent of window size", "optional": true },
+    { "slug": "flashback",             "why": "Record & replay with a free camera - perfect for cinematic stills", "optional": true }
+  ],
+
+  "shaders": [
+    { "slug": "hysteria-shaders",      "why": "Default shader - atmospheric horror, based on Photon, Distant Horizons support" },
+    { "slug": "insanity-shader",       "why": "The original horror shader (BSL-based), Hysteria's predecessor" }
+  ]
+}

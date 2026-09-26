@@ -1,0 +1,94 @@
+name: Build modpack
+
+on:
+  push:
+    paths:
+      - "pack/**"
+      - "scripts/**"
+      - ".github/workflows/build-pack.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve mods and build .mrpack
+        run: python3 scripts/build_mrpack.py --out dist
+      - name: Show index
+        run: unzip -p dist/*.mrpack modrinth.index.json | python3 -c "import json,sys; i=json.load(sys.stdin); print(json.dumps(i['dependencies'])); [print(f['path']) for f in i['files']]"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mrpack
+          path: dist/
+
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: mrpack
+          path: dist
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install headless GL + launcher
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils
+          pip install "portablemc==4.4.1"
+      - name: Launch pack to title screen
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: xvfb-run -a -s "-screen 0 1280x720x24" python3 scripts/smoke_test.py dist/*.mrpack
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-logs
+          path: |
+            smoke/game/logs/
+            smoke/game/crash-reports/
+          if-no-files-found: ignore
+
+  release:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: mrpack
+          path: dist
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(python3 -c "import json; print(json.load(open('pack/pack.json'))['version'])")
+          TAG="v${VERSION}"
+          NOTES=$(python3 - <<'EOF'
+          import json
+          cfg = json.load(open("pack/pack.json"))
+          m = json.load(open("dist/manifest.json"))
+          print(f"Minecraft {m['minecraft']} · Fabric Loader {m['fabric_loader']} · default shader `{m['default_shader']}`\n")
+          print("Import the `.mrpack` into the Modrinth App (or Prism Launcher). See README for recommended settings.\n")
+          print("**Files**")
+          for f in m["files"]:
+              print(f"- `{f['path']}`")
+          EOF
+          )
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Dread Lens $VERSION" --notes "$NOTES"
+          gh release edit "$TAG" --notes "$NOTES"
+          gh release upload "$TAG" dist/*.mrpack --clobber
