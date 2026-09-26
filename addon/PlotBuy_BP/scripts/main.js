@@ -132,13 +132,12 @@ function getBalance(objective, player) {
   }
 }
 
-// Teleport `steps` blocks away from the wall in direction `dir`, facing further that way.
+// Teleport `steps` blocks away from the wall in direction `dir`. No rotation is passed, so the
+// player keeps looking where they were looking.
 function sendFromWall(player, host, dir, steps) {
-  const x = host.x + dir.x * steps + 0.5;
-  const z = host.z + dir.z * steps + 0.5;
   player.teleport(
-    { x, y: host.y, z },
-    { dimension: host.dimension, facingLocation: { x: x + dir.x * 5, y: host.y + 1.6, z: z + dir.z * 5 } }
+    { x: host.x + dir.x * steps + 0.5, y: host.y, z: host.z + dir.z * steps + 0.5 },
+    { dimension: host.dimension }
   );
 }
 
