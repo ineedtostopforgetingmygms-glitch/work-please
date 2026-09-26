@@ -35,16 +35,17 @@ whole mod list support reliably.
 | Logic / memory / loading | Lithium, FerriteCore, ModernFix |
 | Visuals | Distant Horizons (LOD terrain far past render distance), Continuity (connected textures) |
 | Screenshot tools | Freecam, Zoomify, Fabrishot (high-res capture), Flashback (replay + free camera), Chunky (pre-generate a world) |
-| Settings UI | Sodium Extra, Reese's Sodium Options, Mod Menu |
+| Settings UI | Sodium Extra, Mod Menu |
 
 The full list, with the reason for each mod, is in [`pack/pack.json`](pack/pack.json).
 Required dependencies (Fabric API, YACL, and so on) are resolved automatically.
 
 ## Screenshot workflow
 
-1. **Pre-generate the area** so every chunk and LOD is loaded before you shoot:
-   `/chunky radius 512` then `/chunky start`. Distant Horizons fills in the LODs
-   as you fly around.
+1. **Load the scene fully** before you shoot. Pre-generate the nearby area with
+   `/chunky radius 256` then `/chunky start`, and let Distant Horizons build
+   the far LODs itself (it has its own distant generator). Using Chunky over a
+   huge radius can leave holes in DH's LODs.
 2. **Frame the shot**: use **Freecam** to move the camera anywhere, and hold
    **C** for **Zoomify** to zoom. Press **F1** to hide the HUD.
 3. **Capture**:

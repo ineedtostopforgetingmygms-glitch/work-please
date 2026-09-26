@@ -22,7 +22,6 @@
     { "slug": "badoptimizations",      "why": "Micro-optimisations for lightmap, sky and entity data", "optional": true },
 
     { "slug": "sodium-extra",          "why": "Extra Sodium toggles (fog, particles, animations)", "optional": true },
-    { "slug": "reeses-sodium-options", "why": "Cleaner video settings UI", "optional": true },
     { "slug": "modmenu",               "why": "In-game mod config menu" },
 
     { "slug": "distanthorizons",       "why": "Huge view distance via LODs - Hysteria supports it natively" },
