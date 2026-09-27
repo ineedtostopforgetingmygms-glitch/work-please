@@ -85,3 +85,7 @@ python3 tools/build_mcaddon.py   # -> dist/IndependentVillagers_v<version>.mcadd
 - `/scriptevent iv:debug on`: log every decision
 - `/scriptevent iv:status`: every villager's job, task and inventory
 - `/scriptevent iv:spawnjack <x> <z> cartographer|armorer|miner|farmer`: job block plus a villager
+
+## Working on the add-on
+
+See `HANDOFF.md` for how the code fits together, open questions and the plan. `node tools/sim/run.mjs <scenario>` runs the scripts against a fake world, which is a quick check for crashes before testing in game.
