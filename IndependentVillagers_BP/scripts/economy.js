@@ -3,7 +3,7 @@ import { ItemStack } from "@minecraft/server";
 import { ARMOR, AXES, CFG, HOES, LOGS, PICKAXES, pickLevel, PROP_PROFESSION, Profession, TOOL_RECIPES } from "./config.js";
 import { debugLog } from "./debug.js";
 import { GEN_END, vAdd, vCount, vTake } from "./inventory.js";
-import { getInventory, lookAt, particle, playSound } from "./util.js";
+import { eyePos, getInventory, lookAt, particle, playSound } from "./util.js";
 import { TRADES } from "./trades_data.js";
 import { updateTradeTable } from "./trade.js";
 
@@ -54,6 +54,13 @@ export const GOODS = {
   diamond: { label: "diamonds", match: (id) => id === "minecraft:diamond", keep: 0, unit: 4 },
   sugar_cane: { label: "sugar cane", match: (id) => id === "minecraft:sugar_cane", keep: 8 },
   seeds: { label: "seeds", match: (id) => id === "minecraft:wheat_seeds" || id === "minecraft:beetroot_seeds", keep: 8 },
+  pumpkin: { label: "pumpkin", match: (id) => id === "minecraft:pumpkin", keep: 0 },
+  // animal feed for the butcher (the farmer keeps a few carrots and potatoes back to plant)
+  wheat: { label: "wheat", match: (id) => id === "minecraft:wheat", keep: 0 },
+  carrot: { label: "carrots", match: (id) => id === "minecraft:carrot", keep: 8 },
+  potato: { label: "potatoes", match: (id) => id === "minecraft:potato", keep: 8 },
+  // bottles o' enchanting: saved-up experience, for the cleric (TODO(cleric): he isn't written yet)
+  xp_bottle: { label: "bottles o' enchanting", match: (id) => id === "minecraft:experience_bottle", keep: 0, unit: 1 },
 };
 // every tool the armorer makes is a good of its own ("iron_axe", "diamond_pickaxe"...)
 for (const tool of Object.keys(TOOL_RECIPES)) {
@@ -165,8 +172,8 @@ export function buyGood(buyer, seller, good, count, price = priceFor(good, count
   }
 
   // make it look like a deal
-  lookAt(buyer, { x: seller.location.x, y: seller.location.y + 1.5, z: seller.location.z });
-  lookAt(seller, { x: buyer.location.x, y: buyer.location.y + 1.5, z: buyer.location.z });
+  lookAt(buyer, eyePos(seller));
+  lookAt(seller, eyePos(buyer));
   playSound(seller.dimension, "mob.villager.yes", seller.location);
   for (let i = 0; i < 4; i++) particle(seller.dimension, "minecraft:villager_happy", { x: seller.location.x, y: seller.location.y + 2.1, z: seller.location.z });
   debugLog(buyer, `bought ${count} ${GOODS[good]?.label ?? good} from #${String(seller.id).slice(-4)} for ${price} emeralds`);

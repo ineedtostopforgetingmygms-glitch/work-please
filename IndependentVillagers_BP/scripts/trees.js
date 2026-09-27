@@ -51,8 +51,14 @@ export function newScan(centerPos) {
 /** Scans `budget` more columns around the scan centre for tree trunks. */
 export function stepScan(dim, scan, budget) {
   const end = Math.min(SPIRAL.length, scan.i + budget);
+  const near = CFG.FOREST_NEAR * CFG.FOREST_NEAR;
   for (; scan.i < end; scan.i++) {
     const o = SPIRAL[scan.i];
+    // nearest first, so once there are trees enough close by there's no need to look further out
+    if (o.d > near && scan.found.size >= CFG.FOREST_ENOUGH) {
+      scan.i = SPIRAL.length;
+      break;
+    }
     const trunk = trunkInColumn(dim, scan.c.x + o.x, scan.c.z + o.z, scan.c.y);
     if (trunk) scan.found.set(k(trunk), trunk);
   }

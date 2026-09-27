@@ -4,10 +4,12 @@
 import { ItemStack } from "@minecraft/server";
 import { CFG, LOGS } from "../config.js";
 import { debugLog } from "../debug.js";
+import { addXp } from "../xp.js";
 import { GEN_END, vAdd, vTake } from "../inventory.js";
 import { canUse, center, getBlock, lookAt, offset, particle, playSound } from "../util.js";
 
 export const FURNACES = ["minecraft:furnace", "minecraft:lit_furnace"];
+const SMELT_XP = { "minecraft:iron_ingot": 0.7, "minecraft:gold_ingot": 1, "minecraft:cooked_beef": 0.35, "minecraft:cooked_porkchop": 0.35, "minecraft:cooked_chicken": 0.35, "minecraft:cooked_mutton": 0.35 };
 export const BLAST_FURNACES = ["minecraft:blast_furnace", "minecraft:lit_blast_furnace"];
 
 /**
@@ -112,6 +114,7 @@ export function smeltStep(villager, dim, brain, now, ws, cfg) {
   if (out?.typeId === cfg.product) {
     furnace.setItem(2);
     job.got += out.amount;
+    addXp(villager, out.amount * (SMELT_XP[out.typeId] ?? 0.15)); // taking it out earns experience, like a player
     const rest = vAdd(inv, out);
     if (rest) dim.spawnItem(rest, villager.location);
     playSound(dim, "random.pop", fc, 1.2);

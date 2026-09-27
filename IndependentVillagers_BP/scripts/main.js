@@ -2,7 +2,7 @@
 // The main loop runs every CFG.TICK_INTERVAL ticks. Each villager has a "brain" that decides when
 // it next needs to think (every 2 ticks while chopping, less often while idle).
 import { BlockPermutation, ItemStack, system, world } from "@minecraft/server";
-import { CFG, DIMENSIONS, LEAVES, LOGS, PROFESSION_INFO, PROP_PROFESSION, Profession, VANILLA_VILLAGERS, VILLAGER_ID } from "./config.js";
+import { CFG, DIMENSIONS, LEAVES, LOGS, PROFESSION_INFO, PROP_PROFESSION, Profession, VANILLA_VILLAGERS, VILLAGER_ID, XP } from "./config.js";
 import { allBrains, forgetBrain, getBrain, pruneBrains, stateLabel } from "./brain.js";
 import { releaseAllClaims } from "./registry.js";
 import { registerPlacedTracking } from "./placed.js";
@@ -17,6 +17,8 @@ import { minerThink } from "./jobs/miner.js";
 import { farmerThink } from "./jobs/farmer.js";
 import { cartographerThink } from "./jobs/cartographer.js";
 import { armorerThink } from "./jobs/armorer.js";
+import { butcherThink } from "./jobs/butcher.js";
+import { nitwitThink } from "./jobs/nitwit.js";
 import { getWorkstation } from "./jobs/employment.js";
 import { isCreative } from "./inspect.js";
 import { isBeingInspected, viewSelfTest } from "./inventory_view.js";
@@ -26,8 +28,11 @@ import { initVillager } from "./economy.js";
 import { vGive } from "./inventory.js";
 import { startTradeSession, updateTradeTable } from "./trade.js";
 import { clock, marketHours } from "./jobs/market.js";
-import { bellRung, wakeIfNeeded } from "./jobs/rest.js";
+import { bellRung, wakeIfNeeded, wakeUp } from "./jobs/rest.js";
+import { dangerCheck } from "./threat.js";
 import { fieldClaims, releaseFields } from "./jobs/fields.js";
+import { zombify } from "./zombie.js";
+import { bottleXp, xpOf } from "./xp.js";
 
 // profession -> brain function. New jobs plug in here.
 const THINKERS = {
@@ -37,6 +42,8 @@ const THINKERS = {
   [Profession.FARMER]: farmerThink,
   [Profession.CARTOGRAPHER]: cartographerThink,
   [Profession.ARMORER]: armorerThink,
+  [Profession.BUTCHER]: butcherThink,
+  [Profession.NITWIT]: nitwitThink,
 };
 
 system.runInterval(() => {
@@ -68,6 +75,12 @@ system.runInterval(() => {
         continue;
       }
       wakeIfNeeded(villager, dim, brain); // out of bed if anything pulled him out of the sleep state
+      // a zombie about to get him beats everything else - even a deal or his bed
+      try {
+        if (dangerCheck(villager, dim, brain, now, () => wakeUp(villager, dim, brain))) continue;
+      } catch (e) {
+        console.warn(`[Independent Villagers] danger check: ${e}`);
+      }
       if (brain.frozenUntil) {
         if (now < brain.frozenUntil) {
           // standing still for a deal: switch walking off, but keep his plans (route, job) intact
@@ -98,6 +111,10 @@ system.runInterval(() => {
         if (now >= (brain.nextTradeCheck ?? 0)) {
           brain.nextTradeCheck = now + 100;
           updateTradeTable(villager); // offers always match what's in his shop row
+        }
+        if (now >= (brain.nextBottle ?? 0)) {
+          brain.nextBottle = now + XP.BOTTLE_EVERY;
+          bottleXp(villager); // his saved-up experience into bottles o' enchanting
         }
         const think = THINKERS[villager.getProperty(PROP_PROFESSION)] ?? unemployedThink;
         think(villager, dim, brain, now);
@@ -138,18 +155,7 @@ world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   });
 });
 
-// Anything that gets up again and shambles about: kill a villager with one and he comes back as
-// a zombie villager (cure him and the sweep turns him into an independent villager again).
-const ZOMBIES = new Set([
-  "minecraft:zombie",
-  "minecraft:husk",
-  "minecraft:drowned",
-  "minecraft:zombie_villager",
-  "minecraft:zombie_villager_v2",
-  "minecraft:zombified_piglin",
-  "minecraft:zoglin",
-]);
-
+// Killed by a zombie: he rises again as a zombie villager, carrying his things (zombie.js)
 world.afterEvents.entityDie.subscribe(
   (ev) => {
     const id = ev.deadEntity.id;
@@ -162,22 +168,6 @@ world.afterEvents.entityDie.subscribe(
   },
   { entityTypes: [VILLAGER_ID] }
 );
-
-function zombify(ev) {
-  const killer = ev.damageSource?.damagingEntity;
-  if (!CFG.ZOMBIFY || !killer || !ZOMBIES.has(killer.typeId)) return;
-  const dim = ev.deadEntity.dimension;
-  const loc = ev.deadEntity.location;
-  system.run(() => {
-    for (const type of ["minecraft:zombie_villager_v2", "minecraft:zombie_villager"]) {
-      try {
-        dim.spawnEntity(type, loc);
-        console.warn(`[Independent Villagers] a villager was killed by a ${killer.typeId.replace("minecraft:", "")} and rose again as a zombie villager`);
-        return;
-      } catch {}
-    }
-  });
-}
 
 // ---------------------------------------------------------------- debug commands
 //   /scriptevent iv:debug on|off      log every decision to the content log / console
@@ -208,12 +198,12 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
           `[IV] #${String(v.id).slice(-4)} ${prof} | ${brain.state} (${stateLabel(brain) ?? "-"}) | at ${l.x.toFixed(1)} ${l.y.toFixed(1)} ${l.z.toFixed(1)}` +
             ` | worked ${Math.round((system.currentTick - (brain.shiftStart ?? system.currentTick)) / 20)}s` +
             (hours ? ` | trades ${clock(hours.start)}-${clock(hours.start + hours.len)}` : "") +
-            ` | ws ${ws ? `${ws.x} ${ws.y} ${ws.z}` : "-"} | tools ${[getTool(v, "axe")?.id, getTool(v, "pickaxe")?.id, getTool(v, "hoe")?.id].filter(Boolean).map((t) => t.replace("minecraft:", "")).join("+") || "hands"} | inv: ${inv}`
+            ` | ws ${ws ? `${ws.x} ${ws.y} ${ws.z}` : "-"} | xp ${xpOf(v).toFixed(1)} | tools ${[getTool(v, "axe")?.id, getTool(v, "pickaxe")?.id, getTool(v, "hoe")?.id].filter(Boolean).map((t) => t.replace("minecraft:", "")).join("+") || "hands"} | inv: ${inv}`
         );
       }
     }
   } else if (ev.id === "iv:spawnjack") {
-    // /scriptevent iv:spawnjack <x> <z> [miner|farmer|cartographer|armorer]  - job block + villager on the ground at x z (for testing)
+    // /scriptevent iv:spawnjack <x> <z> [miner|farmer|cartographer|armorer|butcher|nitwit]  - job block + villager on the ground at x z (for testing)
     const [x0, z0] = args.map(Number);
     const dim = world.getDimension("minecraft:overworld");
     // open ground, not under a tree (a villager placed inside a trunk suffocates)
@@ -242,9 +232,13 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
     }
     if (!b) return say("[IV] spawnjack: no clear ground found (chunk loaded?)");
     const table = { x, y: b.y + 1, z };
-    const job = { miner: "minecraft:stonecutter_block", farmer: "minecraft:composter", cartographer: "minecraft:cartography_table", armorer: "minecraft:blast_furnace" }[args[2]] ?? "iv:woodcutter_bench";
+    const job = { miner: "minecraft:stonecutter_block", farmer: "minecraft:composter", cartographer: "minecraft:cartography_table", armorer: "minecraft:blast_furnace", butcher: "minecraft:smoker" }[args[2]] ?? "iv:woodcutter_bench";
+    const v = dim.spawnEntity(VILLAGER_ID, { x: x + 1.5, y: b.y + 1, z: z + 0.5 });
+    if (args[2] === "nitwit") {
+      v.setProperty(PROP_PROFESSION, Profession.NITWIT); // no job block for him
+      return say(`[IV] spawnjack: a nitwit at ${x + 1} ${b.y + 1} ${z}`);
+    }
     dim.getBlock(table).setType(job);
-    dim.spawnEntity(VILLAGER_ID, { x: x + 1.5, y: b.y + 1, z: z + 0.5 });
     say(`[IV] spawnjack: table at ${table.x} ${table.y} ${table.z} (ground ${b.typeId})`);
   } else if (ev.id === "iv:goto") {
     // /scriptevent iv:goto <x> <y> <z>  - the nearest villager walks there (pauses its job)

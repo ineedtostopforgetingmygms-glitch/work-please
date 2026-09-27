@@ -487,7 +487,7 @@ function wild(villager, dim, brain, now, ws) {
     return;
   }
   const spot = findStandableNear(dim, base, 2, 2, (q) => samePos(q, base));
-  if (!spot || !navTo(villager, brain, spot, { radius: 0.9 })) {
+  if (!spot || !navTo(villager, brain, spot, { radius: 0.9, partial: true })) {
     (job.bad ??= new Set()).add(k(base));
     return sleep(brain, 4);
   }
@@ -548,7 +548,8 @@ function tend(villager, dim, brain, now, ws) {
   }
 
   const spot = findStandableNear(dim, top, 2, 2, (q) => samePos(q, top)) ?? spotNextTo(dim, top, villager);
-  if (!spot || !navTo(villager, brain, spot, { radius: 0.9 })) {
+  // (his patch can be a long way off: partial routes get him there a stretch at a time)
+  if (!spot || !navTo(villager, brain, spot, { radius: 0.9, partial: true })) {
     job.targets.shift();
     return;
   }
@@ -827,7 +828,7 @@ function fill(villager, dim, brain, now, ws) {
   // dry ground beside it - he doesn't climb into the well
   const wet = (q) => isWater(getBlock(dim, q));
   const spot = findStandableNear(dim, water, 2, 2, wet) ?? findStandableNear(dim, water, 3, 3, wet);
-  if (!spot || !navTo(villager, brain, spot, { radius: 0.9 })) {
+  if (!spot || !navTo(villager, brain, spot, { radius: 0.9, partial: true })) {
     (brain.badWater ??= new Set()).add(k(water));
     brain.job = null;
     return sleep(brain, 20);
@@ -1067,7 +1068,7 @@ function tax(villager, dim, brain, now, ws) {
   if (brain.nav && horizDist(center(brain.nav.goal), payer.location) > 3) navStop(villager, brain);
   if (!brain.nav) {
     const spot = findStandableNear(dim, target, 2, 3);
-    if (!spot || !navTo(villager, brain, spot, { radius: 1.5 })) {
+    if (!spot || !navTo(villager, brain, spot, { radius: 1.5, partial: true })) {
       t.tries = (t.tries ?? 0) + 1;
       if (t.tries > 4) t.queue.shift();
       return sleep(brain, 10);

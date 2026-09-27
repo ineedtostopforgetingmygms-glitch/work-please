@@ -21,7 +21,9 @@
         "miner": "textures/entity/villager2/professions/stonemason",
         "farmer": "textures/entity/villager2/professions/farmer",
         "cartographer": "textures/entity/villager2/professions/cartographer",
-        "armorer": "textures/entity/villager2/professions/armorer"
+        "armorer": "textures/entity/villager2/professions/armorer",
+        "butcher": "textures/entity/villager2/professions/butcher",
+        "nitwit": "textures/entity/villager2/professions/nitwit"
       },
       "geometry": {
         "default": "geometry.iv_villager"

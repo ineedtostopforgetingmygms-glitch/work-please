@@ -10,16 +10,19 @@
 //   stash    tools and gold into his chest, restocks his shop row - everybody's tools come from him
 //   market   his trading hours: stands at his blast furnace and sells (market.js)
 import { ItemStack } from "@minecraft/server";
-import { ARMOR, CFG, LOGS, PROP_PROFESSION, Profession, TOOL_RECIPES, VILLAGER_ID } from "../config.js";
+import { world } from "@minecraft/server";
+import { ARMOR, CFG, GOLEM, LOGS, PROP_PROFESSION, Profession, TOOL_RECIPES, VILLAGER_ID } from "../config.js";
+import { golemCap, golemsNear, IRON_GOLEM } from "../golem.js";
 import { setMode, setState, setWorking, sleep } from "../brain.js";
 import { debugLog } from "../debug.js";
 import { getTool, holdItem, pickupItems } from "../actions.js";
-import { navTo, navUpdate } from "../nav.js";
+import { navStop, navTo, navUpdate } from "../nav.js";
 import { addStockpile } from "../registry.js";
 import { emeralds } from "../economy.js";
 import { storeInto, vAdd, vCount, vFreeSlots, vTake } from "../inventory.js";
 import { restockSellRow } from "../trade.js";
-import { canUse, center, getBlock, getInventory, lookAt, offset, particle, playSound } from "../util.js";
+import { canUse, center, getBlock, getInventory, isPassable, isStandable, lookAt, offset, particle, playSound, ringOffsets } from "../util.js";
+import { placeBlock } from "../actions.js";
 import { getWorkstation, ownsWorkstation, unemploy } from "./employment.js";
 import { isNearHome, spotNextTo, stockpileChests, walkTo } from "./common.js";
 import { haveBench, putDown, useBench } from "./workshop.js";
@@ -42,8 +45,13 @@ const isStick = (id) => id === "minecraft:stick";
 const isFuel = (id) => id === "minecraft:coal" || id === "minecraft:charcoal";
 const isOre = (id) => id === IRON_RAW || id === GOLD_RAW;
 const isProduct = (id) => !!TOOL_RECIPES[id] || id === GOLD;
-const isWanted = (id) => isOre(id) || isFuel(id) || isLog(id) || isStick(id) || isProduct(id) || id === IRON || id === DIAMOND || id === COBBLE;
+const isWanted = (id) => isOre(id) || isFuel(id) || isLog(id) || isStick(id) || isProduct(id) || id === IRON || id === DIAMOND || id === COBBLE || id === PUMPKIN;
 const SMELTED = { [IRON_RAW]: IRON, [GOLD_RAW]: GOLD };
+const IRON_BLOCK = "minecraft:iron_block";
+const PUMPKIN = "minecraft:pumpkin";
+const CARVED = "minecraft:carved_pumpkin";
+const SHEARS = "minecraft:shears";
+const DP_GOLEM = "iv:golemAt"; // when he last built one (world time)
 const fmt = (p) => `${p.x} ${p.y} ${p.z}`;
 
 // which job needs which of his tools
@@ -67,6 +75,7 @@ export function armorerThink(villager, dim, brain, now) {
 const STATES = {
   supply,
   shop,
+  golem: golemState,
   wood: woodState,
   craft,
   smelt,
@@ -109,11 +118,15 @@ function supply(villager, dim, brain, now, ws) {
     }
   }
 
+  // 2b. an iron golem for the village, when it's short of one and he has the iron
+  if (golemPlan(villager, dim, brain, now, ws, inv)) return;
+
   // 3. more to work with: raw iron (and some gold) off the miner, diamonds when he's flush
   const stock = stockOf(villager, dim, ws);
   const ironShort = Object.keys(ARMOR.STOCK).some((t) => TOOL_RECIPES[t].mat === IRON && (stock.get(t) ?? 0) < ARMOR.STOCK[t]);
   const iron = vCount(inv, (id) => id === IRON || id === IRON_RAW);
-  if (iron < ARMOR.KEEP_INGOTS + (ironShort ? 3 : 0)) {
+  const golemIron = wantsGolem(villager, dim, brain, now, ws) && vCount(inv, (id) => id === IRON_BLOCK) < 4 ? GOLEM.IRON + 2 : 0;
+  if (iron < ARMOR.KEEP_INGOTS + (ironShort ? 3 : 0) + golemIron) {
     if (goShopping(villager, brain, "raw_iron", ARMOR.ORE_BUY, "supply", now)) return;
   }
   const diamondShort = Object.keys(ARMOR.STOCK).some((t) => TOOL_RECIPES[t].mat === DIAMOND && (stock.get(t) ?? 0) < ARMOR.STOCK[t]);
@@ -267,6 +280,35 @@ function craft(villager, dim, brain, now, ws) {
   const c = center(table);
   lookAt(villager, c);
 
+  if (item === SHEARS) {
+    if (vTake(inv, (id) => id === IRON, 2).length < 2) return setState(villager, brain, "supply");
+    vAdd(inv, new ItemStack(SHEARS, 1));
+    playSound(dim, "random.anvil_use", c, 1.4);
+    debugLog(villager, "made a pair of shears (for carving a pumpkin)");
+    brain.job = null;
+    return setState(villager, brain, "supply");
+  }
+  if (item === CARVED) {
+    if (!vCount(inv, (id) => id === SHEARS) || vTake(inv, (id) => id === PUMPKIN, 1).length < 1) return setState(villager, brain, "supply");
+    vAdd(inv, new ItemStack(CARVED, 1));
+    vAdd(inv, new ItemStack("minecraft:pumpkin_seeds", 4));
+    playSound(dim, "mob.sheep.shear", c);
+    debugLog(villager, "carved a pumpkin for the golem's head");
+    brain.job = null;
+    return setState(villager, brain, "supply");
+  }
+  if (item === IRON_BLOCK) {
+    const want = 4 - vCount(inv, (id) => id === IRON_BLOCK);
+    const n = Math.min(want, Math.floor(vCount(inv, (id) => id === IRON) / 9));
+    if (n < 1) return setState(villager, brain, "supply");
+    vTake(inv, (id) => id === IRON, n * 9);
+    vAdd(inv, new ItemStack(IRON_BLOCK, n));
+    playSound(dim, "random.anvil_use", c, 0.9);
+    debugLog(villager, `made ${n} iron block(s) for a golem`);
+    brain.job = null;
+    return setState(villager, brain, "supply");
+  }
+
   if (item === "minecraft:furnace") {
     if (vTake(inv, (id) => id === COBBLE, ARMOR.FURNACE_COBBLE).length < ARMOR.FURNACE_COBBLE) return setState(villager, brain, "supply");
     playSound(dim, "dig.stone", c, 1.2);
@@ -297,6 +339,148 @@ function makeSticks(inv, n) {
   if (vTake(inv, isLog, 1).length < 1) return false;
   vAdd(inv, new ItemStack("minecraft:stick", 8));
   return vCount(inv, isStick) >= n;
+}
+
+// ================================================================ iron golem
+
+/** Is the village short of iron golems, and is it long enough since he built the last one? */
+function wantsGolem(villager, dim, brain, now, ws) {
+  if (brain.golemCheck && now - brain.golemCheck.at < 20 * 30) return brain.golemCheck.yes;
+  const last = villager.getDynamicProperty(DP_GOLEM);
+  const t = world.getAbsoluteTime();
+  const due = typeof last !== "number" || t - last >= GOLEM.EVERY || t < last;
+  const yes = due && golemsNear(dim, ws).length < golemCap(dim, ws);
+  brain.golemCheck = { at: now, yes };
+  return yes;
+}
+
+/**
+ * An iron golem: 4 iron blocks (36 ingots) in a T and a carved pumpkin on top. The pumpkin comes
+ * off the farmer and he carves it with shears he makes himself. True if he's off to do a step.
+ */
+function golemPlan(villager, dim, brain, now, ws, inv) {
+  if (!wantsGolem(villager, dim, brain, now, ws)) return false;
+  const blocks = vCount(inv, (id) => id === IRON_BLOCK);
+  const iron = vCount(inv, (id) => id === IRON);
+  if (blocks < 4 && iron + blocks * 9 < GOLEM.IRON) return false; // he'll buy the ore for it (step 3)
+  if (!vCount(inv, (id) => id === CARVED)) {
+    if (!vCount(inv, (id) => id === PUMPKIN)) return goShopping(villager, brain, "pumpkin", 1, "supply", now);
+    if (!vCount(inv, (id) => id === SHEARS)) {
+      if (iron + blocks * 9 < GOLEM.IRON + 2) return false;
+      brain.job = { craft: SHEARS };
+    } else brain.job = { craft: CARVED };
+    setState(villager, brain, "craft");
+    return true;
+  }
+  if (blocks < 4) {
+    brain.job = { craft: IRON_BLOCK };
+    setState(villager, brain, "craft");
+    return true;
+  }
+  brain.job = null;
+  debugLog(villager, "the village could do with another iron golem - building one");
+  setState(villager, brain, "golem");
+  return true;
+}
+
+/** Somewhere near his blast furnace with room for a golem: 3 wide, 3 high, and a spot to work from. */
+function golemSite(dim, ws) {
+  for (const o of ringOffsets(3, 7, [0, 1, -1])) {
+    const p = offset(ws, o.x, o.y, o.z);
+    if (!isStandable(dim, p)) continue;
+    for (const [sx, sz] of [[1, 0], [0, 1]]) {
+      let clear = true;
+      for (let w = -1; w <= 1 && clear; w++) {
+        for (let h = 0; h <= 3 && clear; h++) {
+          const b = getBlock(dim, offset(p, sx * w, h, sz * w));
+          if (!b?.isAir && !(b && isPassable(b) && !/_sapling|torch|rail|_bed$|door/.test(b.typeId))) clear = false;
+        }
+      }
+      if (!clear) continue;
+      for (const f of [1, -1]) {
+        const stand = offset(p, sz * 2 * f, 0, sx * 2 * f);
+        if (isStandable(dim, stand)) return { p, side: [sx, sz], stand };
+      }
+    }
+  }
+  return undefined;
+}
+
+function golemState(villager, dim, brain, now, ws) {
+  setWorking(villager, false);
+  const inv = getInventory(villager);
+  const job = (brain.job ??= { step: 0 });
+  if (!job.site) {
+    job.site = golemSite(dim, ws);
+    if (!job.site) {
+      debugLog(villager, "no room near his blast furnace to build a golem");
+      villager.setDynamicProperty(DP_GOLEM, world.getAbsoluteTime() - GOLEM.EVERY + 20 * 60 * 3); // try again in a bit
+      brain.job = null;
+      return setState(villager, brain, "idle", CFG.IDLE_TIME);
+    }
+  }
+  const { p, side, stand } = job.site;
+  const cells = [
+    { at: p, id: IRON_BLOCK },
+    { at: offset(p, 0, 1, 0), id: IRON_BLOCK },
+    { at: offset(p, side[0], 1, side[1]), id: IRON_BLOCK },
+    { at: offset(p, -side[0], 1, -side[1]), id: IRON_BLOCK },
+    { at: offset(p, 0, 2, 0), id: CARVED },
+  ];
+  // gave up half way: he takes down what he's put up (it's 9 ingots a block)
+  const abandon = (why) => {
+    debugLog(villager, `couldn't finish the golem: ${why}`);
+    for (const c of cells.slice(0, job.step)) {
+      const b = getBlock(dim, c.at);
+      if (b?.typeId !== c.id) continue;
+      b.setType("minecraft:air");
+      vAdd(inv, new ItemStack(c.id, 1));
+    }
+    navStop(villager, brain);
+    brain.job = null;
+    return setState(villager, brain, "idle", CFG.IDLE_TIME);
+  };
+  if (brain.nav) {
+    const r = navUpdate(villager, brain, now);
+    if (r === "moving") return sleep(brain, 4);
+  }
+  if (job.step < cells.length) {
+    const cell = cells[job.step];
+    if (!canUse(dim, villager, cell.at)) {
+      // he works from the spot out in front of it (never from where the golem's going)
+      job.fails = (job.fails ?? 0) + 1;
+      if (job.fails > 6) return abandon(`can't reach ${fmt(cell.at)}`);
+      if (!navTo(villager, brain, stand, { radius: 0.6, partial: true })) return abandon("can't get to the spot in front of it");
+      return sleep(brain, 4);
+    }
+    setMode(villager, brain, "work");
+    if (vTake(inv, (id) => id === cell.id, 1).length < 1) {
+      brain.job = null;
+      return setState(villager, brain, "supply");
+    }
+    if (!placeBlock(villager, dim, cell.at, cell.id, "random.anvil_land")) {
+      vAdd(inv, new ItemStack(cell.id, 1));
+      return abandon(`something in the way at ${fmt(cell.at)}`);
+    }
+    job.step++;
+    return sleep(brain, 12);
+  }
+  // all in place: it comes to life
+  for (const c of cells) {
+    const b = getBlock(dim, c.at);
+    if (b?.typeId === c.id) b.setType("minecraft:air");
+  }
+  try {
+    const g = dim.spawnEntity(IRON_GOLEM, { x: p.x + 0.5, y: p.y, z: p.z + 0.5 });
+    g.triggerEvent("minecraft:from_village");
+  } catch {}
+  for (let i = 0; i < 12; i++) particle(dim, "minecraft:villager_happy", { x: p.x + 0.5 + (Math.random() - 0.5) * 2, y: p.y + Math.random() * 3, z: p.z + 0.5 + (Math.random() - 0.5) * 2 });
+  playSound(dim, "mob.irongolem.repair", center(p));
+  villager.setDynamicProperty(DP_GOLEM, world.getAbsoluteTime());
+  brain.golemCheck = null;
+  debugLog(villager, `built an iron golem at ${fmt(p)}`);
+  brain.job = null;
+  setState(villager, brain, "supply");
 }
 
 // ================================================================ smelt
@@ -330,7 +514,10 @@ function smelt(villager, dim, brain, now, ws) {
     return sleep(brain, 20);
   }
   if (status === "toofar") {
-    stepTo(villager, dim, brain, ws);
+    if (!stepTo(villager, dim, brain, ws)) {
+      brain.job = null;
+      return setState(villager, brain, "idle", CFG.IDLE_TIME);
+    }
     return sleep(brain, 6);
   }
   const got = brain.job?.got ?? 0;
@@ -359,7 +546,10 @@ function char(villager, dim, brain, now, ws) {
   });
   if (status === "working") return sleep(brain, 20);
   if (status === "toofar") {
-    stepTo(villager, dim, brain, fpos);
+    if (!stepTo(villager, dim, brain, fpos)) {
+      brain.job = null;
+      return setState(villager, brain, "idle", CFG.IDLE_TIME);
+    }
     return sleep(brain, 6);
   }
   if (status === "done") debugLog(villager, `burnt ${brain.job?.got ?? 0} charcoal to fire his blast furnace`);
@@ -369,14 +559,10 @@ function char(villager, dim, brain, now, ws) {
 
 function stepTo(villager, dim, brain, pos) {
   const spot = spotNextTo(dim, pos, villager);
-  if (spot && navTo(villager, brain, spot, { radius: 0.8 })) return;
+  if (spot && navTo(villager, brain, spot, { radius: 0.8 })) return true;
+  // no way to stand next to it: he gives up on the furnace for now (see the smelt state)
   brain.tries++;
-  if (brain.tries > 3) {
-    try {
-      villager.teleport(center(spot ?? pos));
-    } catch {}
-    brain.tries = 0;
-  }
+  return brain.tries <= 4;
 }
 
 // ================================================================ stash

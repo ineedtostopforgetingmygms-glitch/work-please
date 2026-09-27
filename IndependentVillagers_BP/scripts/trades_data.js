@@ -86,6 +86,21 @@ export const TRADES = {
           "price": 1
         },
         {
+          "item": "minecraft:andesite",
+          "per": 16,
+          "price": 1
+        },
+        {
+          "item": "minecraft:diorite",
+          "per": 16,
+          "price": 1
+        },
+        {
+          "item": "minecraft:granite",
+          "per": 16,
+          "price": 1
+        },
+        {
           "item": "minecraft:coal",
           "per": 8,
           "price": 1
@@ -104,6 +119,21 @@ export const TRADES = {
           "item": "minecraft:raw_gold",
           "per": 2,
           "price": 1
+        },
+        {
+          "item": "minecraft:redstone",
+          "per": 4,
+          "price": 1
+        },
+        {
+          "item": "minecraft:lapis_lazuli",
+          "per": 4,
+          "price": 1
+        },
+        {
+          "item": "minecraft:diamond",
+          "per": 1,
+          "price": 4
         }
       ]
     },
@@ -140,6 +170,16 @@ export const TRADES = {
         {
           "item": "minecraft:wheat_seeds",
           "per": 24,
+          "price": 1
+        },
+        {
+          "item": "minecraft:pumpkin",
+          "per": 4,
+          "price": 1
+        },
+        {
+          "item": "minecraft:melon_slice",
+          "per": 16,
           "price": 1
         }
       ]
@@ -220,6 +260,43 @@ export const TRADES = {
           "item": "minecraft:diamond_hoe",
           "per": 1,
           "price": 9
+        }
+      ]
+    },
+    "butcher": {
+      "code": "B",
+      "profession": 6,
+      "displayName": "entity.iv.butcher",
+      "sells": [
+        {
+          "item": "minecraft:cooked_beef",
+          "per": 5,
+          "price": 1
+        },
+        {
+          "item": "minecraft:cooked_porkchop",
+          "per": 5,
+          "price": 1
+        },
+        {
+          "item": "minecraft:cooked_chicken",
+          "per": 6,
+          "price": 1
+        },
+        {
+          "item": "minecraft:cooked_mutton",
+          "per": 5,
+          "price": 1
+        },
+        {
+          "item": "minecraft:leather",
+          "per": 4,
+          "price": 1
+        },
+        {
+          "item": "minecraft:feather",
+          "per": 12,
+          "price": 1
         }
       ]
     }

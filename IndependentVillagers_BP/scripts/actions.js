@@ -1,9 +1,10 @@
 // Player-like actions: holding tools, breaking blocks over time, picking up items, placing blocks.
 import { ItemStack, system } from "@minecraft/server";
-import { AXES, CFG, DP_TOOL, HARDNESS, HOES, LEAVES, LOGS, PICKAXE_BLOCK, PICKAXES } from "./config.js";
+import { AXES, CFG, DP_TOOL, HARDNESS, HOES, LEAVES, LOGS, PASSABLE, PICKAXE_BLOCK, PICKAXES } from "./config.js";
 import { setWorking } from "./brain.js";
 import { GEN_END, vAdd, vGive } from "./inventory.js";
 import { canSee, center, getBlock, getInventory, lookAt, playSound } from "./util.js";
+import { addXp, oreXp } from "./xp.js";
 
 // ---------------------------------------------------------------- tools
 // The axe is a real item in the villager's inventory (with real durability). The one in his hand
@@ -149,6 +150,7 @@ export function updateBreak(villager, dim, brain, now) {
   } catch {
     block.setType("minecraft:air");
   }
+  if (!a.noDrop) addXp(villager, oreXp(a.id)); // the experience ore gives (he keeps it, see xp.js)
   brain.action = null;
   return "done";
 }
@@ -197,4 +199,26 @@ export function placeBlock(villager, dim, pos, typeId, sound = "use.wood") {
   }
   playSound(dim, sound, center(pos));
   return true;
+}
+
+/**
+ * Jumps and puts a block under himself at the top of the jump, like a player climbing out of a
+ * hole. `blockId` has already been taken from his inventory; `giveBack` is called if it didn't work.
+ */
+export function pillarUp(villager, dim, blockId, giveBack) {
+  const feet = { x: Math.floor(villager.location.x), y: Math.floor(villager.location.y), z: Math.floor(villager.location.z) };
+  try {
+    villager.applyImpulse({ x: 0, y: 0.42 - Math.max(0, villager.getVelocity().y), z: 0 });
+  } catch {}
+  system.runTimeout(() => {
+    try {
+      const b = getBlock(dim, feet);
+      if (villager.location.y >= feet.y + 0.8 && b && (b.isAir || b.isLiquid || PASSABLE.test(b.typeId))) {
+        b.setType(blockId);
+        playSound(dim, "use.stone", center(feet));
+        return;
+      }
+    } catch {}
+    giveBack?.();
+  }, 5);
 }

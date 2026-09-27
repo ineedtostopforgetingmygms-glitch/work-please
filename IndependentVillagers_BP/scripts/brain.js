@@ -7,7 +7,7 @@ import { debugLog } from "./debug.js";
 const brains = new Map();
 
 export const STATE_LABELS = {
-  jobless: "Looking for a job (place a Woodcutter's Bench, Stonecutter, Composter, Cartography Table or Blast Furnace nearby!)",
+  jobless: "Looking for a job (place a Woodcutter's Bench, Stonecutter, Composter, Cartography Table, Blast Furnace or Smoker nearby!)",
   bench: "Setting up his own woodcutter's bench",
   wood: "Cutting his own wood",
   supply: "Getting ready for work",
@@ -40,6 +40,16 @@ export const STATE_LABELS = {
   pond: "Making a pond for his sugar cane",
   tax: "Collecting taxes",
   char: "Burning charcoal",
+  flee: "Running from a monster!",
+  watch: "Keeping an eye out for monsters",
+  report: "Running to tell the iron golem!",
+  golem: "Building an iron golem",
+  pen: "Building an animal pen",
+  herd: "Looking for animals to bring in",
+  lead: "Leading an animal to the pen",
+  breed: "Feeding the animals",
+  butcher: "Butchering",
+  cook: "At the smoker",
 };
 
 /** What to show a player: a villager who hasn't earned a break yet is only pausing, not resting. */
@@ -100,7 +110,10 @@ export function setState(entity, brain, state, idleFor = 0) {
     brain.onBreak = false;
   }
   brain.shiftStart ??= now;
-  if (brain.state !== state) debugLog(entity, `${brain.state ?? "-"} -> ${state}`);
+  if (brain.state !== state) {
+    debugLog(entity, `${brain.state ?? "-"} -> ${state}`);
+    brain.route = null; // a walk through a mine belongs to the job it was planned for
+  }
   brain.state = state;
   brain.since = now;
   brain.tries = 0;

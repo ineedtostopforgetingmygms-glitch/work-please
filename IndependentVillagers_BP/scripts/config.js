@@ -39,6 +39,8 @@ export const Profession = Object.freeze({
   FARMER: 3,
   CARTOGRAPHER: 4,
   ARMORER: 5,
+  BUTCHER: 6,
+  NITWIT: 7, // never takes a job - keeps watch for monsters and tells the iron golems
 });
 
 // Add new professions here. `workstation` lists the block(s) an unemployed villager claims to get the job.
@@ -69,6 +71,12 @@ export const PROFESSION_INFO = {
     nameTag: "Armorer",
     workstation: ["minecraft:blast_furnace", "minecraft:lit_blast_furnace"],
   },
+  [Profession.BUTCHER]: {
+    name: "Butcher",
+    nameTag: "Butcher",
+    workstation: ["minecraft:smoker", "minecraft:lit_smoker"],
+  },
+  [Profession.NITWIT]: { name: "Nitwit", nameTag: "" },
 };
 
 export const CFG = {
@@ -115,8 +123,10 @@ export const CFG = {
   NAV_MAX_STUCK: 3,
 
   // Lumberjack
-  FOREST_RADIUS: 32, // trees are searched for around the workstation
-  SCAN_COLUMNS_PER_THINK: 200,
+  FOREST_RADIUS: 56, // trees are searched for this far round the workstation (as far as he can path)...
+  FOREST_NEAR: 24, // ...but once he's past this and found FOREST_ENOUGH trunks he stops looking further
+  FOREST_ENOUGH: 8,
+  SCAN_COLUMNS_PER_THINK: 300,
   RESCAN_EVERY: 20 * 60,
   TREE_RADIUS: 7, // max horizontal spread of a single tree from its trunk
   MAX_TREE_LOGS: 600, // giant jungle trees (2x2 trunks, 30+ tall, big branches) can top 300
@@ -168,6 +178,41 @@ export const CFG = {
   TORCH_EVERY: 5, // places one every this many tunnel slices...
   TORCH_GAP: 6, // ...and always when he's this far from the last one he placed (dark corners, caves)
   SMELT_TIMEOUT: 20 * 90,
+};
+
+// ---------------------------------------------------------------- iron golems & nitwits
+export const GOLEM = {
+  RADIUS: 64, // "the village" for counting golems and villagers
+  PER: 10, // one golem, plus one more for every this many villagers...
+  MAX: 4, // ...up to this many
+  ALERT_TIME: 20 * 45, // a golem a nitwit told about a monster hunts for this long
+  IRON: 36, // the armorer builds one from 4 iron blocks (36 ingots) and a carved pumpkin...
+  EVERY: 20 * 60 * 20, // ...no more often than this
+};
+export const NITWIT = {
+  SIGHT: 24, // how far off he spots a monster
+  LOOK_EVERY: 20,
+  GOLEM_RADIUS: 64, // how far he'll run to tell a golem
+  SPEED: 2, // he runs fast (speed effect level + 1)
+  RETELL: 20 * 30, // the same monster is news again after this long
+  TIMEOUT: 20 * 40,
+};
+
+// ---------------------------------------------------------------- experience
+// Villagers save up the experience they earn (ore, smelting, trading, animals) and bottle it:
+// PER_BOTTLE points make a Bottle o' Enchanting (vanilla's bottles give 3-11, 7 on average).
+export const XP = { PER_BOTTLE: 7, MAX_AT_ONCE: 4, BOTTLE_EVERY: 20 * 30 };
+
+// ---------------------------------------------------------------- danger
+// A monster this close and in sight (or one that just hit him) and a villager drops everything and
+// runs - towards an iron golem if there's one about - until he hasn't seen it for SAFE_AFTER.
+export const THREAT = {
+  RADIUS: 10,
+  CLOSE: 3, // this close he doesn't need to see it (it's hitting him)
+  CHECK_EVERY: 10,
+  SAFE_AFTER: 20 * 4,
+  RUN: 12, // how far he runs before looking round again
+  GOLEM_RADIUS: 32,
 };
 
 // ---------------------------------------------------------------- farming
@@ -262,6 +307,28 @@ export const TOOLS = {
   RICH: 64, // iron
   RICH_DIAMOND: 128, // diamond
   RETRY: 20 * 60 * 2, // after asking, don't ask again for this long
+};
+
+// ---------------------------------------------------------------- butcher
+export const BUTCH = {
+  PEN_SEARCH: 20, // he uses a pen that's already there within this of his smoker...
+  PEN_MIN_AREA: 6,
+  PEN_MAX_AREA: 150,
+  PEN_SITE_RADIUS: 14, // ...or builds his own this close
+  PEN_INNER: 5, // 5x5 inside, fenced round (7x7 with the fence)
+  ANIMAL_RADIUS: 48, // how far he goes to fetch an animal
+  HERD_RETRY: 20 * 60 * 2,
+  LEAD_LOSE: 14, // an animal this far behind loses interest in the food
+  LEAD_TIMEOUT: 20 * 90,
+  KEEP_ADULTS: 2, // grown animals of each kind he keeps to breed - the rest are for the smoker
+  MAX_IN_PEN: 8,
+  BREED_EVERY: 20 * 60 * 5, // like vanilla: an animal can breed again after 5 minutes
+  FEED_BUY: 8,
+  REACH: 3.2,
+  HIT: 4, // damage a blow
+  BUTCHER_TIMEOUT: 20 * 40,
+  COOK_AT: 8, // raw meat he collects before firing the smoker
+  RETURN_AT: 32,
 };
 
 // ---------------------------------------------------------------- blocks & items
@@ -402,18 +469,33 @@ export const PICKAXES = {
 // ---------------------------------------------------------------- mining
 
 export const MINE = {
-  WIDTH: 3, // mineshaft is 3 wide...
-  HEIGHT: 4, // ...and 4 tall
-  DEPTH: 12, // staircase goes this far down, then the tunnel runs level
-  FIRST_LENGTH: 32, // slices in the first tunnel (incl. the staircase)
-  BRANCH_LENGTH: 16, // later branches turn off the end of the previous one
-  MAX_SEGMENTS: 8, // tunnels per miner (a shared mine grows to 3x this)
+  // the staircase: 3 wide, 4 tall, in legs of STAIR_LEG steps that turn at a landing (a spiral)
+  STAIR_LEG: 8,
+  STAIR_H: 4,
+  // the levels it stops at: coal just under the village, then iron and (rarely) diamonds deep down
+  COAL_DEPTH: 12, // below his stonecutter
+  IRON_Y: 15,
+  DIAMOND_Y: -53, // above the lava lakes at -55 and below
+  MIN_LEVEL_GAP: 10, // levels closer together than this are one level
+  // on each level: 3x3 main corridors off the landing, 1x2 branches off both sides every few blocks
+  MAIN_LEN: 24,
+  MAIN_H: 3,
+  MAX_MAINS: 4, // per level
+  BRANCH_LEN: 16,
+  BRANCH_EVERY: 3, // two blocks of rock between branches - every block of it gets looked at
+  BRANCH_START: 2,
+  MAX_SEGMENTS: 220, // everything in one mine (it takes a long time to dig this much)
   SHARE_RADIUS: 200, // a miner whose stonecutter is this close to a mine being dug works that mine
   START_OFFSET: 2, // blocks from the stonecutter to the shaft entrance...
   MAX_SHIFT: 20, // ...and how much further out he'll look for a spot clear of the village
   ORE_REACH: 3, // he digs ore this far into the tunnel walls
   ORE_VEIN: 24, // blocks of one vein he'll chase before getting on with the tunnel
-  RETURN_AT: 64, // head home after collecting this many blocks
+  // which level he goes to: coal while he's short of it, iron most of the time, and now and then
+  // - once he's got plenty of iron and an iron pickaxe - down to the diamonds
+  COAL_WANT: 16, // coal (torches count a quarter each) in his pockets and chest
+  IRON_RICH: 48, // raw iron + ingots before he thinks about diamonds...
+  DIAMOND_CHANCE: 0.2, // ...and then only this often
+  STASH_FREE: 4, // pockets full: cheap stacks go in the chest until this many slots are free
   BORROW_LOGS: 4, // 2 for a wooden pickaxe (+ sticks), 2 for a chest
   REPAY: { item: "minecraft:cobblestone", count: 3 },
 };
@@ -474,6 +556,8 @@ export const HARDNESS = {
   "minecraft:short_grass": 0,
   "minecraft:tall_grass": 0,
   "minecraft:farmland": 0.6,
+  "minecraft:pumpkin": 1,
+  "minecraft:melon_block": 1,
   "minecraft:cobblestone": 2,
   "minecraft:andesite": 1.5,
   "minecraft:diorite": 1.5,

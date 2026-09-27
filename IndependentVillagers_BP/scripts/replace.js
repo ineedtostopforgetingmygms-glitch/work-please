@@ -1,6 +1,9 @@
 // Swaps vanilla villagers for independent villagers, keeping their biome skin, name and items.
 // Babies are left alone until they grow up (the periodic sweep picks them up then).
-import { PROP_BIOME, VANILLA_VILLAGERS, VILLAGER_ID } from "./config.js";
+import { PROP_BIOME, PROP_PROFESSION, Profession, VANILLA_VILLAGERS, VILLAGER_ID } from "./config.js";
+import { restoreCured } from "./zombie.js";
+
+const NITWIT_VARIANT = 14;
 import { getInventory, isValid } from "./util.js";
 import { vAdd } from "./inventory.js";
 
@@ -13,6 +16,7 @@ export function replaceVanillaVillager(old) {
   const rotation = old.getRotation();
   const nameTag = old.nameTag;
   const biome = old.getComponent("minecraft:mark_variant")?.value ?? 0;
+  const variant = old.getComponent("minecraft:variant")?.value ?? 0; // 14 is the nitwit
 
   const items = [];
   try {
@@ -35,6 +39,8 @@ export function replaceVanillaVillager(old) {
     const leftover = vAdd(inv, item);
     if (leftover) dim.spawnItem(leftover, location);
   }
+  restoreCured(villager); // a cured zombie villager gets his things back
+  if (variant === NITWIT_VARIANT) villager.setProperty(PROP_PROFESSION, Profession.NITWIT);
 }
 
 export function sweepVanillaVillagers(dim) {

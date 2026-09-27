@@ -14,6 +14,7 @@ import { debugLog } from "./debug.js";
 import { freeze, peekBrain } from "./brain.js";
 import { cleanSellRow, moveToSellRow, sellRowCounts, takeFromSellRow, vAdd, vCount } from "./inventory.js";
 import { getInventory, isValid } from "./util.js";
+import { addXp } from "./xp.js";
 
 const byProfession = {};
 for (const p of Object.values(TRADES.professions)) byProfession[p.profession] = p;
@@ -246,6 +247,7 @@ system.runInterval(() => {
       if (rest) villager.dimension.spawnItem(rest, villager.location);
       s.before.set(sell.item, s.before.get(sell.item) + trades * sell.per);
       villager.setDynamicProperty(DP_TRADESOLD, true);
+      addXp(villager, trades); // trading earns him experience, like a vanilla villager
       debugLog(villager, `sold ${trades * sell.per} ${sell.item.replace("minecraft:", "")} for ${trades * sell.price} emerald(s)`);
     }
     for (const [item, n] of now) if (n < s.before.get(item)) s.before.set(item, n); // they used/dropped some

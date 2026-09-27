@@ -421,12 +421,29 @@ function tryPillar(villager, dim, brain, job, remaining, inv) {
     debugLog(villager, "can't pillar: no logs to stand on");
     return false;
   }
-  villager.teleport({ x: feet.x + 0.5, y: feet.y + 1, z: feet.z + 0.5 });
-  feetBlock.setType(log);
-  playSound(dim, "use.wood", center(feet));
+  // a real jump, and the log goes in under him at the top of it
+  setMode(villager, brain, "work");
+  try {
+    villager.applyImpulse({ x: 0, y: 0.42 - Math.max(0, villager.getVelocity().y), z: 0 });
+  } catch {}
   job.pillar.push(feet);
+  system.runTimeout(() => {
+    try {
+      const b = getBlock(dim, feet);
+      if (villager.location.y >= feet.y + 0.8 && b && (isPassable(b) || (b.isLiquid && !b.typeId.includes("lava")))) {
+        b.setType(log);
+        playSound(dim, "use.wood", center(feet));
+        return;
+      }
+    } catch {}
+    try {
+      vAdd(getInventory(villager), new ItemStack(log, 1)); // didn't get high enough - try again
+    } catch {}
+    const i = job.pillar.findIndex((q) => samePos(q, feet));
+    if (i >= 0) job.pillar.splice(i, 1);
+  }, 5);
   debugLog(villager, `pillaring up (${job.pillar.length})`);
-  sleep(brain, 6);
+  sleep(brain, 12);
   return true;
 }
 

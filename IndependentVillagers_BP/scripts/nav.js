@@ -46,7 +46,7 @@ function steer(villager, nav) {
   const len = Math.sqrt(dx * dx + dz * dz);
   if (len < 0.05) return;
 
-  const speed = 0.2;
+  const speed = nav.fast ? 0.3 : 0.2; // running from something, or a nitwit with news
   const v = villager.getVelocity();
   const ix = (dx / len) * Math.min(speed, len * 0.5) - v.x;
   const iz = (dz / len) * Math.min(speed, len * 0.5) - v.z;
@@ -60,12 +60,29 @@ function steer(villager, nav) {
     const at = (p) => getBlock(villager.dimension, p)?.typeId.replace("minecraft:", "") ?? "?";
     debugLog(villager, `steer: not moving at ${loc.x.toFixed(2)} ${loc.y.toFixed(2)} ${loc.z.toFixed(2)} towards ${node.x} ${node.y} ${node.z} - ahead feet=${at(f)} head=${at(offset(f, 0, 1, 0))}`);
   }
-  const jump = villager.isOnGround && (node.y > loc.y + 0.6 || stepUpAhead(villager, loc, dx / len, dz / len) || blocked) ? 0.45 : 0;
+  // Hop up a step - one block, never more. The impulse brings his upward speed to a normal jump
+  // (0.42) rather than adding to it, and there's a pause between hops: isOnGround stays true for a
+  // tick after a jump, and two impulses back to back used to send him up two blocks.
+  const now = system.currentTick;
+  const wantsUp = node.y > loc.y + 0.6 || stepUpAhead(villager, loc, dx / len, dz / len);
+  let jump = 0;
+  if (wantsUp && villager.isOnGround && v.y <= 0.01 && now - (nav.lastJump ?? -100) >= JUMP_GAP) {
+    jump = 0.42 - Math.max(0, v.y);
+    nav.lastJump = now;
+  }
   villager.applyImpulse({ x: ix, y: jump, z: iz });
+  // turn smoothly towards where he's going instead of snapping round
+  const want = (Math.atan2(-dx, dz) * 180) / Math.PI;
+  let yaw = nav.yaw ?? want;
+  let diff = ((want - yaw + 540) % 360) - 180;
+  yaw += Math.max(-30, Math.min(30, diff));
+  nav.yaw = yaw;
   try {
-    villager.setRotation({ x: 0, y: (Math.atan2(-dx, dz) * 180) / Math.PI });
+    villager.setRotation({ x: 0, y: yaw });
   } catch {}
 }
+
+const JUMP_GAP = 10; // ticks between two hops
 
 // ---------------------------------------------------------------- doors
 // Villagers open the doors in their way and - now - shut them again behind them, like the vanilla
@@ -207,13 +224,19 @@ function startSearch(villager, nav) {
   nav.search.step(CFG.PATH_BUDGET);
 }
 
-/** Start walking to `goal` (a standable feet position). Returns false if it's clearly unreachable. */
-export function navTo(villager, brain, goal, { radius = 0.8 } = {}) {
+/**
+ * Start walking to `goal` (a standable feet position). Returns false if it's clearly unreachable.
+ * `partial`: if there's no way all the way there, walk as close as he can get instead (the caller
+ * sees "arrived" and decides what to do from there - walking, never teleporting).
+ */
+export function navTo(villager, brain, goal, { radius = 0.8, partial = false } = {}) {
   navStop(villager, brain);
   const now = system.currentTick;
   const nav = {
     goal,
     radius,
+    partial,
+    fast: !!brain.fast,
     slot: acquireSlot(villager.id),
     marker: null,
     waypoint: null,
@@ -224,13 +247,32 @@ export function navTo(villager, brain, goal, { radius = 0.8 } = {}) {
   };
   brain.nav = nav;
   startSearch(villager, nav);
-  if (nav.search.status === "failed") {
+  if (nav.search.status === "failed" && !usePartial(villager, nav)) {
     debugLog(villager, `nav: no path to ${goal.x} ${goal.y} ${goal.z}`);
     navStop(villager, brain);
     return false;
   }
   if (nav.search.status === "found") return beginWalking(villager, brain);
   setMode(villager, brain, "work"); // stand still while thinking about the route
+  return true;
+}
+
+/**
+ * No route all the way: if he asked for it, head for the spot that got closest to the goal (if that
+ * gets him meaningfully nearer). True if there's now a route to walk.
+ */
+function usePartial(villager, nav) {
+  if (!nav.partial || !nav.search) return false;
+  const path = nav.search.partial();
+  const end = path[path.length - 1];
+  const from = floorPos(villager.location);
+  const gain = horizDist(from, nav.goal) - horizDist(end, nav.goal);
+  if (path.length < 2 || gain < 2) return false;
+  debugLog(villager, `nav: no way right up to ${nav.goal.x} ${nav.goal.y} ${nav.goal.z} - getting as close as he can (${end.x} ${end.y} ${end.z})`);
+  nav.search.path = path;
+  nav.search.status = "found";
+  nav.goal = end;
+  nav.partial = false; // one fallback per route
   return true;
 }
 
@@ -311,7 +353,7 @@ export function navUpdate(villager, brain, now) {
   if (nav.search) {
     const s = nav.search.step(CFG.PATH_BUDGET);
     if (s === "running") return "moving";
-    if (s === "failed") {
+    if (s === "failed" && !usePartial(villager, nav)) {
       debugLog(villager, `nav: no path to ${nav.goal.x} ${nav.goal.y} ${nav.goal.z} (searched ${nav.search.expanded} spots)`);
       navStop(villager, brain);
       return "failed";
@@ -399,6 +441,10 @@ export function navUpdate(villager, brain, now) {
       setManual(villager, brain, false);
       removeMarker(dim, nav);
       startSearch(villager, nav);
+      if (nav.search.status === "failed" && !usePartial(villager, nav)) {
+        navStop(villager, brain);
+        return "failed";
+      }
       if (nav.search.status === "found" && !beginWalking(villager, brain)) return "failed";
     }
   }

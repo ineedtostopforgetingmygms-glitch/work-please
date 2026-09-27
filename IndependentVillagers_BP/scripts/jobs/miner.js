@@ -13,7 +13,7 @@
 //            restocks his shop row, upgrades to a stone pickaxe when he can
 //   market   his trading hours: stands at his stonecutter and sells (market.js)
 import { BlockPermutation, ItemStack } from "@minecraft/server";
-import { BUILD_BLOCK, BUILD_BLOCK_EXCEPTIONS, CFG, LOGS, MINE, MINER_PICKUPS, MINE_AVOID, ORE, oreLevel, PICKAXE_BLOCK, PICKAXES, pickLevel, UNBREAKABLE } from "../config.js";
+import { BUILD_BLOCK, BUILD_BLOCK_EXCEPTIONS, CFG, LOGS, MINE, MINER_PICKUPS, MINE_AVOID, ORE, oreLevel, PICKAXE_BLOCK, PICKAXES, pickLevel, Profession, UNBREAKABLE } from "../config.js";
 import { setMode, setState, setWorking, sleep } from "../brain.js";
 import { debugLog } from "../debug.js";
 import { getTool, giveTool, holdItem, pickupItems, placeBlock, startBreak, updateBreak, wearTool } from "../actions.js";
@@ -21,7 +21,6 @@ import { navTo, navUpdate } from "../nav.js";
 import { addStockpile } from "../registry.js";
 import { takeGood } from "../economy.js";
 import { storeInto, vAdd, vCount, vFreeSlots, vTake } from "../inventory.js";
-import { restockSellRow } from "../trade.js";
 import { canSee, canUse, center, countItems, dist, eyePos, findStandableNear, firstBlockInSight, floorPos, getBlock, getInventory, horizDist, isPassable, isStandable, lookAt, offset, particle, playSound, samePos } from "../util.js";
 import { getWorkstation, ownsWorkstation, unemploy } from "./employment.js";
 import { isNearHome, spotNextTo, stockpileChests, walkTo } from "./common.js";
@@ -31,7 +30,9 @@ import { goShopping, shop } from "./shopping.js";
 import { shopForTool } from "./tools.js";
 import { market } from "./market.js";
 import { hideState, offDuty, sleepState } from "./rest.js";
-import { claimSegment, createMine, findMine, finishSegment, mineOf, newBranch, saveMines, sliceCenter } from "./mines.js";
+import { chooseWork, createMine, findMine, finishSegment, firstLeg, floorCells, levelsFor, mineOf, saveMines, sliceCells, sliceCenter, sliceFloorY, standFor } from "./mines.js";
+import { FILLERS, followRoute, planRoute, routeTo } from "./mineroute.js";
+import { restockSellRow, tradeInfo } from "../trade.js";
 import { furnaceHas, furnaceNear, pickStack, plankFuel, smeltStep } from "./smelting.js";
 
 const WORKSTATIONS = ["minecraft:stonecutter_block", "minecraft:stonecutter"];
@@ -106,6 +107,10 @@ function supply(villager, dim, brain, now, ws) {
   // 3. torches to light the mine
   if (torchPlan(villager, dim, brain, now, ws, inv, tableCost)) return;
 
+  // 4. which level of the mine this trip
+  const level = chooseLevel(villager, dim, ws, inv);
+  if (level !== brain.mineLevel) debugLog(villager, `off to the ${level} level this time`);
+  brain.mineLevel = level;
   setState(villager, brain, "dig");
 }
 
@@ -294,9 +299,7 @@ function takeFuel(inv, n) {
 }
 
 function finishCraft(villager, dim, tableCenter, item) {
-  try {
-    villager.teleport(villager.location, { facingLocation: tableCenter });
-  } catch {}
+  lookAt(villager, tableCenter);
   giveTool(villager, item);
   playSound(dim, "dig.wood", tableCenter, 1.4);
   particle(dim, "minecraft:villager_happy", offset(tableCenter, 0, 0.8, 0));
@@ -338,7 +341,11 @@ function smelt(villager, dim, brain, now, ws) {
   );
   if (status === "working") return sleep(brain, 20);
   if (status === "toofar") {
-    stepToFurnace(villager, dim, brain, now, ws);
+    if (!stepToFurnace(villager, dim, brain, now, ws)) {
+      brain.job = null;
+      brain.smeltWhat = null;
+      return setState(villager, brain, "idle", CFG.IDLE_TIME);
+    }
     return sleep(brain, 6);
   }
   const got = brain.job?.got ?? 0;
@@ -374,14 +381,9 @@ function stepToFurnace(villager, dim, brain, now, ws) {
   if (!fpos) return false;
   const spot = spotNextTo(dim, fpos, villager);
   if (spot && navTo(villager, brain, spot, { radius: 0.8 })) return true;
+  // no way to stand next to it: he gives up on the furnace for now (see the smelt state)
   brain.tries++;
-  if (brain.tries > 3) {
-    try {
-      villager.teleport(center(spot ?? fpos));
-    } catch {}
-    brain.tries = 0;
-  }
-  return true;
+  return brain.tries <= 4;
 }
 // ================================================================ dig
 
@@ -391,16 +393,6 @@ const DIRS = [
   [-1, 0],
   [0, -1],
 ];
-
-/** The 3x4 blocks of slice i, top row first, middle column first. */
-function sliceBlocks(seg, i) {
-  const c = sliceCenter(seg, i);
-  const px = -seg.dz;
-  const pz = seg.dx;
-  const out = [];
-  for (let h = MINE.HEIGHT - 1; h >= 0; h--) for (const w of [0, -1, 1]) out.push({ x: c.x + px * w, y: c.y + h, z: c.z + pz * w });
-  return out;
-}
 
 function unsafe(dim, p) {
   const b = getBlock(dim, p);
@@ -424,7 +416,7 @@ function villageInTheWay(dim, seg, slices = 6) {
   for (let i = -1; i < slices; i++) {
     const c = sliceCenter(seg, i);
     for (let w = -2; w <= 2; w++) {
-      for (let h = -1; h <= MINE.HEIGHT; h++) {
+      for (let h = -1; h <= seg.h; h++) {
         const b = getBlock(dim, { x: c.x - seg.dz * w, y: c.y + h, z: c.z + seg.dx * w });
         if (!b) return "unloaded chunk";
         if (MINE_AVOID.test(b.typeId)) return b.typeId.replace("minecraft:", "");
@@ -435,16 +427,17 @@ function villageInTheWay(dim, seg, slices = 6) {
 }
 
 /**
- * Where to start the shaft: the direction whose first slices are safest and most solid, moved
+ * Where to start the staircase: the direction whose first steps are safest and most solid, moved
  * further out from the stonecutter (up to MINE.MAX_SHIFT) until it's clear of the village.
  */
 function planMine(dim, ws, bad = [], villager = undefined) {
+  const levels = levelsFor(dim.id, ws);
   let best;
   for (const [dx, dz] of DIRS) {
     if (bad.includes(`${dx},${dz}`)) continue;
     let blockedBy;
     for (let off = MINE.START_OFFSET; off <= MINE.START_OFFSET + MINE.MAX_SHIFT; off += 2) {
-      const seg = { ox: ws.x + dx * off, oy: ws.y, oz: ws.z + dz * off, dx, dz, len: MINE.FIRST_LENGTH, descend: true };
+      const seg = firstLeg(ws.x + dx * off, ws.y, ws.z + dz * off, dx, dz, levels);
       const village = villageInTheWay(dim, seg);
       if (village) {
         blockedBy ??= village;
@@ -452,8 +445,8 @@ function planMine(dim, ws, bad = [], villager = undefined) {
       }
       let solid = 0;
       let hazard = false;
-      for (let i = 0; i < 6 && !hazard; i++) {
-        for (const p of sliceBlocks(seg, i)) {
+      for (let i = 0; i < Math.min(6, seg.len) && !hazard; i++) {
+        for (const p of sliceCells(seg, i)) {
           const b = getBlock(dim, p);
           if (!b || unsafe(dim, p)) {
             hazard = true;
@@ -468,81 +461,160 @@ function planMine(dim, ws, bad = [], villager = undefined) {
       break; // the nearest workable start in this direction is the one he'd use
     }
   }
-  if (villager && best?.why) {
-    debugLog(villager, `started the shaft ${best.off} blocks out - ${best.why} in the way closer in`);
-  }
-  return best && { segs: [best.seg], cur: 0, i: 0, bad };
+  if (villager && best?.why) debugLog(villager, `started the shaft ${best.off} blocks out - ${best.why} in the way closer in`);
+  return best?.seg;
 }
 
-function needsStash(inv) {
-  return vFreeSlots(inv) <= 1 || vCount(inv, (id) => STONEISH.has(id)) >= MINE.RETURN_AT;
+// ---------------------------------------------------------------- which level
+
+/**
+ * Where in the mine he goes this trip: the coal level when he's short of coal (torches!), the
+ * iron level most of the time, and now and then - once he has plenty of iron and a pickaxe that
+ * can take it - all the way down to the diamond level.
+ */
+function chooseLevel(villager, dim, ws, inv) {
+  const chests = stockpileChests(dim, ws, "stone").map((c) => c.container);
+  const inChests = (pred) => chests.reduce((n, c) => n + countItems(c, pred), 0);
+  const all = (pred) => countItems(inv, pred) + inChests(pred);
+  const coal = all(isFuel) + Math.floor(all(isTorch) / 4);
+  const pick = pickLevel(getTool(villager, "pickaxe")?.id ?? "");
+  if (coal < MINE.COAL_WANT || pick < 2) return "coal";
+  const iron = all((id) => id === IRON_RAW || id === IRON);
+  if (pick >= 3 && iron >= MINE.IRON_RICH && Math.random() < MINE.DIAMOND_CHANCE) return "diamond";
+  return "iron";
+}
+
+// ---------------------------------------------------------------- full pockets
+
+// What an item is worth to him: the price of one at his stall (cheap stone first when room's short)
+const VALUE = new Map();
+for (const s of tradeInfo(Profession.MINER)?.sells ?? []) VALUE.set(s.item, s.price / s.per);
+const valueOf = (id) => VALUE.get(id) ?? (id === "minecraft:emerald" ? 1 : 0.02);
+
+/** The cheapest stack he carries that he'd be willing to put away. */
+function cheapestStack(inv) {
+  let best;
+  for (let i = 0; i < 18; i++) {
+    const it = inv.getItem(i);
+    if (!it || keptOnHand(it.typeId)) continue;
+    const v = valueOf(it.typeId);
+    if (!best || v < best.v || (v === best.v && it.amount > best.n)) best = { slot: i, id: it.typeId, v, n: it.amount };
+  }
+  return best;
+}
+
+/** Never put away: his tools, money, torches and what he makes them with. */
+function keptOnHand(id) {
+  return !!PICKAXES[id] || id === "minecraft:emerald" || isLog(id) || isStick(id) || isTorch(id) || isFuel(id);
 }
 
 /**
- * Which mine and which tunnel of it he works on: joins a mine within MINE.SHARE_RADIUS of his
- * stonecutter, or plans his own. Returns {mine, seg} ({mine} alone when it's finished), or
- * undefined if there's nowhere safe to dig.
+ * Time to go home? He keeps everything he digs to sell - pockets full of cobblestone are fine -
+ * until there's something better lying at his feet that won't fit (then a cheap stack goes in the
+ * chest to make room), or he's leaving a trail of stuff behind him.
  */
-function workplace(villager, dim, ws, now) {
+function needsStash(villager, dim, inv) {
+  if (vFreeSlots(inv) > 0) return false;
+  let items;
+  try {
+    items = dim.getEntities({ type: "minecraft:item", location: villager.location, maxDistance: 4 });
+  } catch {
+    return false;
+  }
+  const cheapest = cheapestStack(inv);
+  let left = 0;
+  for (const it of items) {
+    let stack;
+    try {
+      stack = it.getComponent("minecraft:item")?.itemStack;
+    } catch {
+      continue;
+    }
+    if (!stack || !isWanted(stack.typeId)) continue;
+    if (vAdd(fakeCopy(inv), stack) === undefined) continue; // it'd fit (tops up a stack)
+    left++;
+    if (cheapest && valueOf(stack.typeId) > cheapest.v) return true; // worth more than what he's got
+  }
+  return left >= 12;
+}
+
+// a throwaway copy of his pockets, for "would this fit?"
+function fakeCopy(inv) {
+  const slots = [];
+  for (let i = 0; i < inv.size; i++) slots.push(inv.getItem(i));
+  return {
+    size: inv.size,
+    getItem: (i) => slots[i]?.clone(),
+    setItem: (i, it) => (slots[i] = it),
+  };
+}
+
+// ---------------------------------------------------------------- where he digs
+
+/**
+ * Which mine and which stretch of it he works on. Returns {mine, seg}, {mine, wait}, {mine} (all
+ * dug out) or undefined (nowhere safe to dig).
+ */
+function workplace(villager, dim, ws, now, brain) {
   let mine = findMine(villager, dim.id, ws);
   if (!mine) {
-    const plan = planMine(dim, ws, [], villager);
-    if (!plan) return undefined;
-    mine = createMine(villager, dim.id, ws, plan.segs[0]);
-    const s0 = mine.segs[0];
-    debugLog(villager, `planned a new mineshaft heading ${s0.dx},${s0.dz} from ${s0.ox} ${s0.oy} ${s0.oz}`);
+    const leg = planMine(dim, ws, [], villager);
+    if (!leg) return undefined;
+    mine = createMine(villager, dim.id, ws, leg);
+    debugLog(villager, `planned a new mine heading ${leg.dx},${leg.dz} from ${fmt({ x: leg.ox, y: leg.oy, z: leg.oz })}: levels ${mine.levels.map((l) => `${l.n} at y=${l.y}`).join(", ")}`);
   }
   if (mine.done) return { mine };
-  let seg = claimSegment(mine, villager.id, now);
-  if (!seg) {
-    seg = newBranch(mine, villager.id, now);
-    if (seg) debugLog(villager, `starting a new tunnel (#${mine.segs.length}) off the mine at ${mine.x} ${mine.y} ${mine.z}`);
-  }
-  if (!seg) {
-    if (mine.segs.some((s) => !s.done)) {
-      // someone's still digging the shaft - nothing to branch off yet
-      if (now - (brain_waitSaid.get(villager.id) ?? -1e9) > 20 * 60) {
-        brain_waitSaid.set(villager.id, now);
-        debugLog(villager, `waiting for the shaft of the mine at ${mine.x} ${mine.y} ${mine.z} to get deep enough to branch off`);
-      }
-      return { mine, wait: true };
-    }
-    mine.done = true;
-    saveMines();
+  const want = brain.mineLevel ?? "iron";
+  const w = chooseWork(mine, villager.id, now, want);
+  if (w.done) {
     debugLog(villager, "mine finished");
     return { mine };
   }
-  if (seg !== brain_lastSeg.get(villager.id)) {
-    brain_lastSeg.set(villager.id, seg);
-    const who = mine.segs.filter((s) => s.owner && !s.done).length;
-    debugLog(villager, `working tunnel #${mine.segs.indexOf(seg) + 1} of the mine at ${mine.x} ${mine.y} ${mine.z} (${who} miner(s) digging there)`);
+  if (w.wait) {
+    if (now - (brain.waitSaid ?? -1e9) > 20 * 60) {
+      brain.waitSaid = now;
+      debugLog(villager, `nothing free in the mine at ${mine.x} ${mine.y} ${mine.z} right now - waiting for the others`);
+    }
+    return { mine, wait: true };
+  }
+  const seg = w.seg;
+  if (seg !== brain.lastSeg) {
+    brain.lastSeg = seg;
+    const who = new Set(mine.segs.filter((s) => s.owner && !s.done).map((s) => s.owner)).size;
+    const what = seg.k === "stair" ? `the staircase (down to y=${sliceFloorY(seg, seg.len - 1)})` : `a ${seg.k === "main" ? "main corridor" : "branch"} on the ${seg.lvl} level`;
+    debugLog(villager, `wants the ${want} level - digging ${what}, tunnel #${mine.segs.indexOf(seg) + 1} (${who} miner(s) at work in this mine)`);
   }
   return { mine, seg };
 }
-const brain_lastSeg = new Map();
-const brain_waitSaid = new Map();
 
-/** This tunnel ends here (water, lava, can't reach the face...). The very first shaft re-plans. */
+/** This stretch ends here (water, lava, can't reach the face...). A first staircase that got nowhere re-plans. */
 function endTunnel(villager, dim, mine, seg, why) {
   debugLog(villager, `${why} - ending this tunnel`);
   seg.len = seg.i;
   if (mine.segs.indexOf(seg) === 0 && seg.len < 3) {
     // the staircase didn't get anywhere: try another direction from the same stonecutter
     mine.bad = [...(mine.bad ?? []), `${seg.dx},${seg.dz}`];
-    const plan = planMine(dim, mine, mine.bad, villager);
-    if (plan) {
-      Object.assign(seg, plan.segs[0], { i: 0, done: false });
+    const leg = planMine(dim, mine, mine.bad, villager);
+    if (leg) {
+      Object.assign(seg, leg, { i: 0, done: false });
       debugLog(villager, `shaft heading didn't work out - trying ${seg.dx},${seg.dz} instead`);
-      return saveMines();
+      return saveMines(mine);
     }
     mine.done = true;
   }
   finishSegment(mine, seg);
 }
 
+const at = (villager, p, r = 1.0) => horizDist(villager.location, center(p)) <= r && Math.abs(villager.location.y - p.y) <= 0.6;
+
 function dig(villager, dim, brain, now, ws) {
   const inv = getInventory(villager);
 
+  if (brain.route && !brain.route.exit) {
+    const r = followRoute(villager, dim, brain, now);
+    if (r === "moving") return sleep(brain, 4);
+    if (r === "failed") brain.digWalkFails = (brain.digWalkFails ?? 0) + 1;
+  }
   if (brain.action) {
     const id = brain.action.id;
     const r = updateBreak(villager, dim, brain, now);
@@ -560,9 +632,9 @@ function dig(villager, dim, brain, now, ws) {
 
   const pick = getTool(villager, "pickaxe");
   if (!pick) return setState(villager, brain, "supply");
-  if (needsStash(inv)) return setState(villager, brain, "stash");
+  if (needsStash(villager, dim, inv)) return setState(villager, brain, "stash");
 
-  const work = workplace(villager, dim, ws, now);
+  const work = workplace(villager, dim, ws, now, brain);
   if (!work) {
     debugLog(villager, "no safe place to dig a mineshaft here");
     return setState(villager, brain, "idle", 20 * 60);
@@ -570,57 +642,50 @@ function dig(villager, dim, brain, now, ws) {
   const { mine, seg } = work;
   if (!seg) return setState(villager, brain, "idle", work.wait ? 20 * 20 : 20 * 60);
   if (seg.i >= seg.len) return finishSegment(mine, seg);
+  const idx = mine.segs.indexOf(seg);
 
-  // stand in the previous slice, facing the rock
-  const stand = seg.i === 0 ? { x: seg.ox - seg.dx, y: seg.oy, z: seg.oz - seg.dz } : sliceCenter(seg, seg.i - 1);
+  // can't get to it after all that: somebody else can try, he goes and does something else
+  if ((brain.digWalkFails ?? 0) >= 3) {
+    brain.digWalkFails = 0;
+    debugLog(villager, `can't get to tunnel #${idx + 1} - leaving it for now`);
+    seg.owner = undefined;
+    seg.seen = 0;
+    if (seg.i === 0 && seg.k === "branch") finishSegment(mine, seg); // a branch nobody can reach: forget it
+    else saveMines(mine);
+    return setState(villager, brain, "idle", 20 * 30);
+  }
+
+  // stand in the slice before the face (for a new tunnel, in the one it opens off)
+  const stand = standFor(seg, seg.i);
   const l = villager.location;
   if (now - (brain.digTrace ?? 0) > 100) {
     brain.digTrace = now;
-    debugLog(villager, `dig: tunnel ${mine.segs.indexOf(seg) + 1} slice ${seg.i}/${seg.len}, stand ${fmt(stand)} (standable=${isStandable(dim, stand)}), at ${l.x.toFixed(1)} ${l.y.toFixed(1)} ${l.z.toFixed(1)}, walkFails=${brain.digWalkFails ?? 0}`);
+    debugLog(villager, `dig: tunnel ${idx + 1} (${seg.k}${seg.lvl ? `, ${seg.lvl} level` : ""}) slice ${seg.i}/${seg.len}, stand ${fmt(stand)}, at ${l.x.toFixed(1)} ${l.y.toFixed(1)} ${l.z.toFixed(1)}`);
   }
   if (!getBlock(dim, stand)) return sleep(brain, 20); // not loaded yet - wait, don't give up on it
-  // a long way off (his tunnel is in a shared mine): walk over there first
-  if (horizDist(l, center(stand)) > 16) {
-    if ((brain.digWalkFails ?? 0) >= 2) {
-      // can't find the way (e.g. hemmed in by leaves): last resort, like walkTo does
-      const to = isStandable(dim, stand) ? stand : findStandableNear(dim, stand, 1, 1);
-      if (to) {
-        debugLog(villager, "couldn't walk to his tunnel - teleporting");
-        villager.teleport(center(to));
-        brain.digWalkFails = 0;
-      }
+  if (!at(villager, stand)) {
+    // through the mine, junction by junction; the last step (or a new mine's entrance) on foot
+    const [tn, ti] = seg.i > 0 ? [idx, seg.i - 1] : [seg.p, seg.at];
+    const onRoute = tn >= 0 && horizDist(l, center(stand)) > 2.5;
+    if (onRoute && !routeTo(brain, tn, ti)) {
+      planRoute(villager, brain, mine, tn, ti);
+      return sleep(brain, 2);
+    }
+    if (onRoute && brain.route) return sleep(brain, 2);
+    const spot = isStandable(dim, stand) ? stand : findStandableNear(dim, stand, 1, 1);
+    if (!spot) return endTunnel(villager, dim, mine, seg, `can't get to the tunnel face at ${fmt(stand)}`);
+    if (!at(villager, spot, 0.8)) {
+      if (navTo(villager, brain, spot, { radius: 0.5, partial: true })) return sleep(brain, 4);
+      brain.digWalkFails = (brain.digWalkFails ?? 0) + 1;
       return sleep(brain, 10);
     }
-    if (navTo(villager, brain, isStandable(dim, stand) ? stand : findStandableNear(dim, stand, 1, 1) ?? stand, { radius: 0.9 })) return sleep(brain, 4);
-    brain.digWalkFails = (brain.digWalkFails ?? 0) + 1;
-    return sleep(brain, 10);
-  }
-  // (if that exact spot isn't standable, e.g. a flower pot or slab, stand right next to it)
-  const spot = isStandable(dim, stand) ? stand : findStandableNear(dim, stand, 1, 1);
-  if (!spot) {
-    brain.digWalkFails = 0;
-    return endTunnel(villager, dim, mine, seg, `can't get to the tunnel face at ${fmt(stand)}`);
-  }
-  if ((brain.digWalkFails ?? 0) >= 3) {
-    // one step away and still not getting there (a corner of his own tunnel): step over it
-    debugLog(villager, `couldn't take the last step to ${fmt(spot)} - stepping over`);
-    try {
-      villager.teleport(center(spot));
-    } catch {}
-    brain.digWalkFails = 0;
-    return sleep(brain, 6);
-  }
-  if (horizDist(l, center(spot)) > 1.0 || Math.abs(l.y - spot.y) > 0.6) {
-    if (navTo(villager, brain, spot, { radius: 0.5 })) return sleep(brain, 4);
-    brain.digWalkFails = (brain.digWalkFails ?? 0) + 1;
-    return sleep(brain, 10);
   }
   brain.digWalkFails = 0;
   setMode(villager, brain, "work");
   holdItem(villager, pick.id);
 
   // safety: water, lava, builds, bedrock -> this tunnel ends here
-  const blocks = sliceBlocks(seg, seg.i);
+  const blocks = sliceCells(seg, seg.i);
   for (const p of blocks) {
     if (isPassable(getBlock(dim, p))) continue;
     const why = unsafe(dim, p);
@@ -629,23 +694,25 @@ function dig(villager, dim, brain, now, ws) {
   }
 
   // floor: bridge over holes / caves with cobblestone, like a player would
-  const c = sliceCenter(seg, seg.i);
-  for (const w of [0, -1, 1]) {
-    const f = { x: c.x - seg.dz * w, y: c.y - 1, z: c.z + seg.dx * w };
+  const floor = floorCells(seg, seg.i);
+  const mid = Math.floor(floor.length / 2);
+  for (let n = 0; n < floor.length; n++) {
+    const f = floor[n];
     const fb = getBlock(dim, f);
     if (fb && isPassable(fb) && !fb.isLiquid) {
-      if (vTake(inv, (id) => id === COBBLE, 1).length) {
-        placeBlock(villager, dim, f, COBBLE, "use.stone");
+      const filler = FILLERS.find((id) => vCount(inv, (x) => x === id) > 0);
+      if (filler && vTake(inv, (id) => id === filler, 1).length) {
+        placeBlock(villager, dim, f, filler, "use.stone");
         return sleep(brain, 6);
       }
-      if (w === 0) return endTunnel(villager, dim, mine, seg, "hole in the floor and no cobblestone to fill it");
+      if (n === mid) return endTunnel(villager, dim, mine, seg, "hole in the floor and nothing to fill it");
     }
   }
 
   // dig the next block he can see. Natural blocks in the space right in front of the face (the
   // previous slice - e.g. a bush at the entrance) get cleared too when they're in the way.
   const set = new Set(blocks.map(fmt));
-  const approachSet = new Set(sliceBlocks(seg, seg.i - 1).map(fmt));
+  const approachSet = new Set(seg.i > 0 ? sliceCells(seg, seg.i - 1).map(fmt) : []);
   const feetBelow = fmt(offset(floorPos(villager.location), 0, -1, 0));
   for (const p of blocks) {
     const b = getBlock(dim, p);
@@ -653,7 +720,10 @@ function dig(villager, dim, brain, now, ws) {
     const seen = firstBlockInSight(dim, villager, p);
     if (!seen) continue;
     const key = fmt(seen);
-    const ok = set.has(key) || (approachSet.has(key) && key !== feetBelow && !unsafe(dim, seen));
+    // (a corner of rock hiding part of the face - where a new tunnel turns off another - gets
+    // knocked out too, the way a player widens the opening to see what he's digging)
+    const corner = !set.has(key) && seen.y >= stand.y && key !== feetBelow && blocks.some((q) => Math.max(Math.abs(q.x - seen.x), Math.abs(q.y - seen.y), Math.abs(q.z - seen.z)) <= 1);
+    const ok = set.has(key) || ((approachSet.has(key) || corner) && key !== feetBelow && !unsafe(dim, seen));
     if (ok && dist(eyePos(villager), center(seen)) <= CFG.REACH) {
       // ore in the way of the tunnel that his pickaxe is too soft for: he goes and makes a better
       // one if he can, and otherwise breaks through it knowing it'll come to nothing
@@ -684,33 +754,40 @@ function dig(villager, dim, brain, now, ws) {
   if (((seg.i + 1) % CFG.TORCH_EVERY === 0 || darkHere) && placeTorch(villager, dim, seg, seg.i, inv, brain)) return sleep(brain, 6);
   seg.i++;
   seg.seen = now;
-  saveMines();
-  if (seg.i % 8 === 0) debugLog(villager, `tunnel ${mine.segs.indexOf(seg) + 1}: ${seg.i}/${seg.len}`);
+  saveMines(mine);
+  if (seg.i % 8 === 0) debugLog(villager, `tunnel ${idx + 1}: ${seg.i}/${seg.len}`);
   sleep(brain, 4);
 }
+
 /**
  * Ore in the tunnel walls. Like a player, he stops when something shows in the rock, follows the
  * vein as far as he can reach and then fills the holes he's left behind with spare cobblestone,
- * so the tunnel comes out with tidy walls instead of pockets everywhere.
+ * so the tunnel comes out with tidy walls instead of pockets everywhere. He never digs ore out of
+ * the floor he walks on (that's how stairs get holes in them).
  *
  * Returns true while he's busy with a vein (the tunnel waits).
  */
 function oreStep(villager, dim, brain, seg, inv, pick) {
   const job = (brain.oreJob ??= { fill: [], dug: 0 });
   const tunnel = new Set();
-  for (let i = seg.i - 1; i <= seg.i + 1; i++) for (const p of sliceBlocks(seg, i)) tunnel.add(fmt(p));
+  const walkway = new Set();
+  for (let i = seg.i - 1; i <= seg.i + 1; i++) {
+    for (const p of sliceCells(seg, i)) tunnel.add(fmt(p));
+    if (i >= 0) for (const p of floorCells(seg, i)) walkway.add(fmt(p));
+  }
 
   // 1. anything left to dig out? (nearest first, and only what he can see and reach)
   if (job.dug < MINE.ORE_VEIN) {
-    const c = sliceCenter(seg, seg.i - 1);
+    const c = sliceCenter(seg, Math.max(0, seg.i - 1));
     const r = MINE.ORE_REACH;
     let target;
     let bestD = Infinity;
     for (let dx = -r; dx <= r; dx++) {
-      for (let dy = -1; dy <= MINE.HEIGHT; dy++) {
+      for (let dy = -1; dy <= seg.h; dy++) {
         for (let dz = -r; dz <= r; dz++) {
           const p = { x: c.x + dx, y: c.y + dy, z: c.z + dz };
-          if (tunnel.has(fmt(p))) continue; // the tunnel face itself gets dug anyway
+          const key = fmt(p);
+          if (tunnel.has(key) || walkway.has(key)) continue; // the face gets dug anyway; the floor stays
           const b = getBlock(dim, p);
           if (!b || !ORE.test(b.typeId)) continue;
           if (oreLevel(b.typeId) > pickLevel(pick.id)) {
@@ -749,11 +826,13 @@ function oreStep(villager, dim, brain, seg, inv, pick) {
       const standingThere = samePos(p, here) || samePos(p, offset(here, 0, 1, 0)) || samePos(p, offset(here, 0, -1, 0));
       if (!b || !isPassable(b) || tunnel.has(fmt(p)) || standingThere) continue;
       if (!canUse(dim, villager, p)) continue; // out of reach now - leave that one open
-      if (!vTake(inv, (id) => id === COBBLE, 1).length) {
+      const filler = FILLERS.find((id) => vCount(inv, (x) => x === id) > 0);
+      if (!filler) {
         job.fill.length = 0; // nothing to fill with; he'll do better next time
         break;
       }
-      placeBlock(villager, dim, p, COBBLE, "use.stone");
+      vTake(inv, (id) => id === filler, 1);
+      placeBlock(villager, dim, p, filler, "use.stone");
       return true;
     }
   }
@@ -765,18 +844,20 @@ function oreStep(villager, dim, brain, seg, inv, pick) {
 // /scriptevent iv:torchtest - the other way round they pop off at the next block update)
 const TORCH_FACING = { "1,0": "east", "-1,0": "west", "0,1": "south", "0,-1": "north" };
 
-/** Hangs a torch on the tunnel wall at head height in slice i. False if there's nothing to do. */
+/** Hangs a torch on the tunnel wall in slice i (at head height in a branch). False if there's nothing to do. */
 function placeTorch(villager, dim, seg, i, inv, brain) {
   if (vCount(inv, isTorch) < 1) return false;
   const c = sliceCenter(seg, i);
   if (brain.torchAt === fmt(c)) return false; // one go per slice, even if it didn't stick
   const px = -seg.dz;
   const pz = seg.dx;
+  const half = (seg.w - 1) / 2;
+  const ty = Math.min(2, seg.h - 1);
   for (const w of i % 2 ? [1, -1] : [-1, 1]) {
-    const t = { x: c.x + px * w, y: c.y + 2, z: c.z + pz * w };
+    const t = { x: c.x + px * half * w, y: c.y + ty, z: c.z + pz * half * w };
     const tb = getBlock(dim, t);
     if (tb?.typeId === "minecraft:torch") return false; // already lit
-    const wb = getBlock(dim, { x: c.x + px * 2 * w, y: c.y + 2, z: c.z + pz * 2 * w });
+    const wb = getBlock(dim, { x: c.x + px * (half + 1) * w, y: c.y + ty, z: c.z + pz * (half + 1) * w });
     if (!tb?.isAir || !wb || isPassable(wb) || wb.isLiquid) continue;
     if (!canUse(dim, villager, t)) continue;
     try {
@@ -794,7 +875,8 @@ function placeTorch(villager, dim, seg, i, inv, brain) {
     return true;
   }
   // no wall to hang it on (he's broken into a cave): stand one on the floor beside him
-  for (const w of [1, -1, 0]) {
+  if (seg.w < 3) return false; // (not in the middle of a 1-wide branch)
+  for (const w of [1, -1]) {
     const t = { x: c.x + px * w, y: c.y, z: c.z + pz * w };
     const tb = getBlock(dim, t);
     if (tb?.typeId === "minecraft:torch") return false;
@@ -819,6 +901,11 @@ function placeTorch(villager, dim, seg, i, inv, brain) {
 
 // ================================================================ stash
 
+/**
+ * Home with a full load. Everything he's dug is stock: his shop row gets filled first, and he
+ * keeps the rest on him to sell later. Only when his pockets are full does the cheapest of it go
+ * in the chest - a stack of cobblestone makes way for iron, never the other way round.
+ */
 function stash(villager, dim, brain, now, ws) {
   setWorking(villager, false);
   const inv = getInventory(villager);
@@ -828,45 +915,48 @@ function stash(villager, dim, brain, now, ws) {
   if (r === "moving") return sleep(brain, 4);
   setMode(villager, brain, "work");
 
-  if (!brain.job?.visit) brain.job = { visit: { tried: new Set(), placed: 0 } };
+  if (!brain.job?.visit) {
+    brain.job = { visit: { tried: new Set(), placed: 0 } };
+    restockSellRow(villager, []); // the shop row first, out of his own pockets
+  }
   const visit = brain.job.visit;
   const chests = stockpileChests(dim, ws, "stone");
 
-  // keep: tools, emeralds, some logs/sticks, torches, a little coal for torches, 16 cobblestone
-  // for bridging - and his diamonds and redstone, which the armorer and cartographer buy off him
-  const cobble = vCount(inv, (id) => id === COBBLE);
-  const coal = vCount(inv, isFuel);
-  const iron = vCount(inv, (id) => id === IRON_RAW || id === IRON);
-  const wantsIron = pickLevel(getTool(villager, "pickaxe")?.id ?? "") < 3;
-  const extra = (id) =>
-    !PICKAXES[id] &&
-    id !== "minecraft:emerald" &&
-    !isLog(id) &&
-    !isStick(id) &&
-    !isTorch(id) &&
-    id !== "minecraft:diamond" &&
-    id !== "minecraft:redstone" &&
-    !(isFuel(id) && coal <= 8) &&
-    !(id === COBBLE && cobble <= 16) &&
-    !(wantsIron && (id === IRON_RAW || id === IRON) && iron <= 3); // saving up for an iron pickaxe
-
-  if (vCount(inv, extra) > 0) {
+  const isJunk = (id) => !keptOnHand(id) && !VALUE.has(id); // dirt, gravel... nobody buys it
+  if ((vFreeSlots(inv) < MINE.STASH_FREE && cheapestStack(inv)) || vCount(inv, isJunk) > 0) {
     for (const { block, container } of chests) {
       const key = fmt(block);
       if (visit.tried.has(key)) continue;
-      visit.tried.add(key);
-      if (!canUse(dim, villager, block, CFG.REACH + 1)) continue; // not through a wall
-      try {
-        villager.teleport(villager.location, { facingLocation: center(block) });
-      } catch {}
+      if (!canUse(dim, villager, block, CFG.REACH + 1)) {
+        visit.tried.add(key); // not through a wall
+        continue;
+      }
+      lookAt(villager, center(block));
       playSound(dim, "random.chestopen", center(block));
-      const keepCobble = cobble > 16 ? vTake(inv, (id) => id === COBBLE, 16).length : 0;
-      storeInto(inv, container, extra);
-      if (keepCobble) vAdd(inv, new ItemStack(COBBLE, keepCobble));
-      return sleep(brain, 16);
+      // the junk goes in, then the cheapest stacks until there's room again
+      let stored = false;
+      if (vCount(inv, isJunk) > 0) {
+        storeInto(inv, container, isJunk);
+        stored = true;
+        if (vCount(inv, isJunk) > 0) visit.tried.add(key); // full
+      }
+      while (vFreeSlots(inv) < MINE.STASH_FREE) {
+        const c = cheapestStack(inv);
+        if (!c) break;
+        const it = inv.getItem(c.slot);
+        const rest = container.addItem(it);
+        inv.setItem(c.slot, rest);
+        if (rest) {
+          visit.tried.add(key); // this chest's full
+          break;
+        }
+        stored = true;
+        debugLog(villager, `put a stack of ${c.id.replace("minecraft:", "")} away to make room`);
+      }
+      if (stored) return sleep(brain, 16);
     }
-    // no chest (or full): craft one from 2 logs - buy the wood, or cut it himself, if he has none
-    if (visit.placed < 2) {
+    // no chest (or they're all full): craft one from 2 logs - buy the wood, or cut it himself
+    if (visit.placed < 2 && (vFreeSlots(inv) < MINE.STASH_FREE || vCount(inv, isJunk) > 0)) {
       if (vCount(inv, isLog) < CFG.CHEST_COST_LOGS) {
         if (!chests.length) {
           if (goShopping(villager, brain, "logs", CFG.WOOD_DEAL.logs, "stash", now)) return;

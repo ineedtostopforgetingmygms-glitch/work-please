@@ -16,6 +16,10 @@ const DIRS = [
 
 const key = (x, y, z) => `${x},${y},${z}`;
 
+// what a block of water costs on a route, against 1 for a block of dry ground
+const WATER_WADE = 8;
+const WATER_SWIM = 20;
+
 class Heap {
   constructor() {
     this.a = [];
@@ -123,6 +127,12 @@ export class PathSearch {
     return !!b && b.isLiquid && !b.typeId.includes("lava");
   }
 
+  /** Extra cost of standing here: 0 on dry land, a lot in water (and more again out of your depth). */
+  wet(x, y, z) {
+    if (!this.water(x, y, z)) return 0;
+    return this.water(x, y - 1, z) ? WATER_SWIM : WATER_WADE;
+  }
+
   /** Feet space: open, or wading water. */
   feetOk(x, y, z) {
     return this.passable(x, y, z) || this.water(x, y, z);
@@ -178,8 +188,8 @@ export class PathSearch {
             for (let y = ny + 2; y <= n.y + 1; y++) if (!this.passable(nx, y, nz)) clear = false;
             if (!clear) continue;
           }
-          // wading is slow - prefer dry land when there is some
-          const cost = (diagonal ? 1.414 : 1) + (dy > 0 ? 0.6 : dy < 0 ? 0.3 * -dy : 0) + (this.water(nx, ny, nz) ? 1.5 : 0);
+          // villagers keep out of the water: wading costs as much as a long detour, swimming more
+          const cost = (diagonal ? 1.414 : 1) + (dy > 0 ? 0.6 : dy < 0 ? 0.3 * -dy : 0) + this.wet(nx, ny, nz);
           const g = n.g + cost;
           const k = key(nx, ny, nz);
           if (g >= (this.best.get(k) ?? Infinity)) break;

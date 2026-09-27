@@ -15,4 +15,5 @@ entity.iv.miner=Miner
 entity.iv.farmer=Farmer
 entity.iv.cartographer=Cartographer
 entity.iv.armorer=Armorer
+entity.iv.butcher=Butcher
 entity.iv:inventory_view.name=Villager Inventory

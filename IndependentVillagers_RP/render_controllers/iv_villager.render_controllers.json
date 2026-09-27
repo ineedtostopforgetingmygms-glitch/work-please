@@ -26,7 +26,7 @@
             "Texture.swamp",
             "Texture.taiga"
           ],
-          "Array.professions": ["Texture.unskilled", "Texture.lumberjack", "Texture.miner", "Texture.farmer", "Texture.cartographer", "Texture.armorer"]
+          "Array.professions": ["Texture.unskilled", "Texture.lumberjack", "Texture.miner", "Texture.farmer", "Texture.cartographer", "Texture.armorer", "Texture.butcher", "Texture.nitwit"]
         }
       },
       "geometry": "Geometry.default",

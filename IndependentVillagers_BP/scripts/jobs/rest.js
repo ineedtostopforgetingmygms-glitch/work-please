@@ -199,16 +199,10 @@ function headForShelter(villager, dim, brain, now, ws) {
     if (r === "moving") return "walking";
     brain.shelterFails = (brain.shelterFails ?? 0) + 1;
   }
-  // wedged in his own doorway (it happens): the last step inside doesn't have to be walked
-  if ((brain.shelterFails ?? 0) >= 2) {
+  // can't get in there: close enough counts (in the doorway), otherwise another house next time
+  if ((brain.shelterFails ?? 0) >= 3) {
     brain.shelterFails = 0;
-    if (dist(villager.location, center(spot)) <= 6) {
-      debugLog(villager, `couldn't walk the last bit indoors - stepping inside at ${spot.x} ${spot.y} ${spot.z}`);
-      try {
-        villager.teleport(center(spot));
-      } catch {}
-      return "there";
-    }
+    if (dist(villager.location, center(spot)) <= 2.5) return "there";
     brain.shelter = null;
     brain.noShelterUntil = now + CFG.SHELTER.RETRY;
     return "nowhere";

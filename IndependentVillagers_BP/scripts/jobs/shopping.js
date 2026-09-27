@@ -9,7 +9,7 @@ import { freeze, setMode, setState, setWorking, sleep } from "../brain.js";
 import { debugLog } from "../debug.js";
 import { navStop, navTo, navUpdate } from "../nav.js";
 import { buyGood, emeralds, GOODS, priceFor, spareOf } from "../economy.js";
-import { center, dist, findStandableNear, floorPos, horizDist, particle, playSound, samePos } from "../util.js";
+import { center, dist, eyePos, findStandableNear, floorPos, horizDist, lookAt, particle, playSound, samePos } from "../util.js";
 import { isAtMarket, willingToTrade } from "./market.js";
 
 const DEAL_TICKS = 60; // 3 seconds
@@ -115,12 +115,12 @@ export function shop(villager, dim, brain, now) {
 
 /** Face each other, green sparkles over both heads, the odd villager noise. */
 function dealEffects(buyer, seller, now, deal) {
-  const bHead = { x: buyer.location.x, y: buyer.location.y + 1.5, z: buyer.location.z };
-  const sHead = { x: seller.location.x, y: seller.location.y + 1.5, z: seller.location.z };
-  try {
-    buyer.teleport(buyer.location, { facingLocation: sHead });
-    seller.teleport(seller.location, { facingLocation: bHead });
-  } catch {}
+  // eye to eye: each looks at the other's eyes from his own (a teleport's facingLocation aims
+  // from the feet, which had them both staring at the sky)
+  const bHead = eyePos(buyer);
+  const sHead = eyePos(seller);
+  lookAt(buyer, sHead);
+  lookAt(seller, bHead);
   if (now < deal.next) return;
   deal.next = now + 6;
   for (const h of [bHead, sHead]) {

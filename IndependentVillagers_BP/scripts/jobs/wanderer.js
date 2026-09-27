@@ -10,7 +10,7 @@ import { debugLog } from "../debug.js";
 import { navStop, navTo, navUpdate } from "../nav.js";
 import { emeralds } from "../economy.js";
 import { vAdd, vTake } from "../inventory.js";
-import { center, findStandableNear, floorPos, getInventory, horizDist, isValid, lookAt, particle, playSound } from "../util.js";
+import { center, eyePos, findStandableNear, floorPos, getInventory, horizDist, isValid, lookAt, particle, playSound } from "../util.js";
 
 export const WANDERING_TRADER = "minecraft:wandering_trader";
 const DEAL_TICKS = 60;
@@ -65,7 +65,7 @@ export function traderState(villager, dim, brain, now) {
   if (t.deal) {
     lookAt(villager, head);
     try {
-      trader.teleport(trader.location, { facingLocation: { x: villager.location.x, y: villager.location.y + 1.5, z: villager.location.z } });
+      lookAt(trader, eyePos(villager));
     } catch {}
     if (now % 6 === 0) particle(dim, "minecraft:villager_happy", { x: head.x, y: head.y + 0.8, z: head.z });
     if (now < t.deal) return sleep(brain, 2);

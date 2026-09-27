@@ -49,7 +49,7 @@ for (const [block, c] of Object.entries(CROPS)) SEED_TO_CROP[c.seed] = block;
 
 const isSeed = (id) => id in SEED_TO_CROP;
 const isLog = (id) => LOGS.has(id);
-const PRODUCE = new Set(["minecraft:wheat", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:bread", "minecraft:wheat_seeds", "minecraft:beetroot_seeds", "minecraft:poisonous_potato"]);
+const PRODUCE = new Set(["minecraft:wheat", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:bread", "minecraft:wheat_seeds", "minecraft:beetroot_seeds", "minecraft:poisonous_potato", "minecraft:pumpkin", "minecraft:melon_slice", "minecraft:pumpkin_seeds", "minecraft:melon_seeds"]);
 const isWanted = (id) => PRODUCE.has(id) || isSeed(id) || id === "minecraft:bone_meal" || id.endsWith("_hoe");
 const IRON_RAW = "minecraft:raw_iron";
 const IRON = "minecraft:iron_ingot";
@@ -88,7 +88,12 @@ const STATES = {
 
 // ================================================================ survey
 
+// pumpkins and melons: the fruit is the harvest (the stem stays and grows another)
+const FRUIT = new Set(["minecraft:pumpkin", "minecraft:melon_block"]);
+const STEMS = new Set(["minecraft:pumpkin_stem", "minecraft:melon_stem"]);
+
 const isRipe = (block) => {
+  if (FRUIT.has(block?.typeId)) return true;
   const c = CROPS[block?.typeId];
   if (!c) return false;
   try {
@@ -112,7 +117,13 @@ function lookAround(dim, ws) {
         land.push(p);
         const above = getBlock(dim, offset(p, 0, 1, 0));
         if (!above) break;
-        if (isRipe(above)) ripe.push({ x: p.x, y: p.y + 1, z: p.z });
+        if (STEMS.has(above.typeId)) {
+          // a pumpkin or melon grown on the block beside the stem
+          for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const q = { x: p.x + ox, y: p.y + 1, z: p.z + oz };
+            if (FRUIT.has(getBlock(dim, q)?.typeId) && !ripe.some((r) => samePos(r, q))) ripe.push(q);
+          }
+        } else if (isRipe(above)) ripe.push({ x: p.x, y: p.y + 1, z: p.z });
         else if (above.isAir) bare.push({ x: p.x, y: p.y + 1, z: p.z });
         break;
       }
@@ -478,7 +489,10 @@ function smelt(villager, dim, brain, now, ws) {
   });
   if (status === "working") return sleep(brain, 20);
   if (status === "toofar") {
-    stepToFurnace(villager, dim, brain, now, ws);
+    if (!stepToFurnace(villager, dim, brain, now, ws)) {
+      brain.job = null;
+      return setState(villager, brain, "idle", CFG.IDLE_TIME);
+    }
     return sleep(brain, 6);
   }
   if (status === "done") debugLog(villager, `took ${brain.job?.got ?? 0} iron ingot(s) out of the furnace`);
@@ -492,14 +506,9 @@ function stepToFurnace(villager, dim, brain, now, ws) {
   if (!fpos) return false;
   const spot = spotNextTo(dim, fpos, villager);
   if (spot && navTo(villager, brain, spot, { radius: 0.8 })) return true;
+  // no way to stand next to it: he gives up on the furnace for now (see the smelt state)
   brain.tries++;
-  if (brain.tries > 3) {
-    try {
-      villager.teleport(center(spot ?? fpos));
-    } catch {}
-    brain.tries = 0;
-  }
-  return true;
+  return brain.tries <= 4;
 }
 // ================================================================ fill the bucket
 
