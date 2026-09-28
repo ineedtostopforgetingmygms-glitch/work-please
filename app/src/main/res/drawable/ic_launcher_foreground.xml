@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Speech bubble with a slash through it: "no more sorry". 108dp canvas, art kept in the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,34h36a6,6 0,0 1,6 6v22a6,6 0,0 1,-6 6H50l-10,9v-9h-4a6,6 0,0 1,-6 -6V40a6,6 0,0 1,6 -6z" />
+    <path
+        android:strokeColor="#C62828"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M34,76L74,30" />
+</vector>

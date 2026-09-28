@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Sorry Fixer</string>
+    <string name="service_description">Changes \"sorry\" to \"Stop saying sorry so much PLEASE YOUR GOOD GNG\" in any app, right after you type it. It only reads the text box you are typing in, skips password boxes, and never sends anything anywhere.</string>
+    <string name="title">Stop saying sorry 🙏</string>
+    <string name="status_on">Sorry Fixer is ON ✅</string>
+    <string name="status_off">Sorry Fixer is OFF ❌</string>
+    <string name="steps">To turn it on:\n\n1. Tap the button below\n2. Find \"Sorry Fixer\" in the list (it may be under \"Downloaded services\")\n3. Switch it on and tap OK\n\nThen type \"sorry \" anywhere and watch what happens.</string>
+    <string name="open_settings">Open accessibility settings</string>
+    <string name="try_it">Try it here: type sorry and a space</string>
+</resources>

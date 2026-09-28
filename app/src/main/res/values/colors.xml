@@ -1,0 +1,5 @@
+<resources>
+    <color name="on">#2E7D32</color>
+    <color name="off">#C62828</color>
+    <color name="icon_bg">#FFB300</color>
+</resources>
