@@ -30,9 +30,31 @@ public class SorryFixerTest {
     }
 
     @Test
+    public void everySpellingOfSorry() {
+        String[] variants = {
+            "sorry", "Sorry", "SORRY", "sory", "soorry", "sooooorry", "sorrrry", "sorryyyy",
+            "sorri", "sorrie", "sowwy", "sowy", "sowwie", "SoWwY",
+            "sry", "srry", "sryyy", "SRY",
+            "soz", "sozz", "sozzy", "soza", "sorz",
+        };
+        for (String v : variants) {
+            SorryFixer.Result r = SorryFixer.fix(v + " ", v.length() + 1);
+            if (r == null) {
+                throw new AssertionError("didn't catch: " + v);
+            }
+            assertEquals(v, R + " ", r.text);
+        }
+    }
+
+    @Test
     public void ignoresOtherWords() {
-        assertNull(SorryFixer.fix("sorrow is not sorryful ", 23));
-        assertNull(SorryFixer.fix("hello there ", 12));
+        String[] words = {
+            "sorrow", "sorryful", "sore", "soy", "sow", "sowing", "sri", "sozzled",
+            "sorority", "hello", "isorry",
+        };
+        for (String w : words) {
+            assertNull(w, SorryFixer.fix(w + " ", w.length() + 1));
+        }
         assertNull(SorryFixer.fix("", 0));
     }
 

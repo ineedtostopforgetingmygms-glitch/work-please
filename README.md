@@ -1,12 +1,18 @@
 # Sorry Fixer
 
 An Android app (Android 8.0 and up) that changes **sorry** into
-**Stop saying sorry so much PLEASE YOUR GOOD GNG** in any app, the moment you
-finish typing the word.
+**Dont say that your good man its ok** in any app, the moment you finish typing
+the word.
 
-It catches `sorry`, `SORRY`, `Sorryyyy`, `sorrry` and `sry`. It leaves words like
-`sorrow` alone, skips password boxes, and doesn't touch the "sorry" inside its own
-replacement, so it can't get stuck in a loop.
+It catches every spelling of sorry, in any caps:
+
+- `sorry`, `sory`, `soorry`, `sorrrry`, `sorryyyy`
+- `sorri`, `sorrie`
+- `sowwy`, `sowy`, `sowwie`
+- `sry`, `srry`, `sryyy`
+- `soz`, `sozz`, `sozzy`, `soza`, `sorz`
+
+It leaves real words like `sorrow`, `sore` and `sowing` alone, and skips password boxes.
 
 ## Install it
 

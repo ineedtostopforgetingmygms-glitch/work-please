@@ -13,11 +13,18 @@ import java.util.regex.Pattern;
  */
 public final class SorryFixer {
 
-    public static final String REPLACEMENT = "Stop saying sorry so much PLEASE YOUR GOOD GNG";
+    public static final String REPLACEMENT = "Dont say that your good man its ok";
 
-    // sorry, SORRY, sorryyy, sorrry, sry — as a whole word, followed by a non-letter.
+    // Every spelling of sorry, in any case, as a whole word followed by a non-letter:
+    //   sorry sory soorry sorryyy   (s o r y, any letter stretched)
+    //   sorri sorrie                (i/ie ending)
+    //   sowwy sowy sowwie           (w instead of r)
+    //   sry srry sryyy              (no o)
+    //   soz sozz sozzy soza sorz    (British slang)
     private static final Pattern SORRY = Pattern.compile(
-            "(?<![\\p{L}\\p{N}])(?:sor+y+|sry)(?=[^\\p{L}\\p{N}])",
+            "(?<![\\p{L}\\p{N}])"
+                    + "(?:so+[rw]+(?:y+|i+e*)|sr+y+|so+z+(?:y+|a+)?|so+r+z+)"
+                    + "(?=[^\\p{L}\\p{N}])",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     public static final class Result {
@@ -43,7 +50,7 @@ public final class SorryFixer {
             return null;
         }
 
-        // The replacement itself contains "sorry"; don't touch those or we'd loop forever.
+        // If the replacement ever contains a "sorry", leave it alone so we can't loop forever.
         List<int[]> protectedRanges = findReplacementRanges(text);
 
         StringBuilder out = new StringBuilder(text.length() + REPLACEMENT.length());
