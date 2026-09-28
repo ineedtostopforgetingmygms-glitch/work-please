@@ -4,6 +4,7 @@ import { peekBrain, stateLabel } from "./brain.js";
 import { getInventory, prettyName, summarizeItems } from "./util.js";
 import { getWorkstation } from "./jobs/employment.js";
 import { getTool } from "./actions.js";
+import { shortName } from "./names.js";
 
 export function isCreative(player) {
   try {
@@ -21,7 +22,7 @@ export function showInventory(player, villager) {
   const ws = getWorkstation(villager);
 
   const lines = [
-    `§6--- ${villager.nameTag || info.name} §7(${info.name}) §6---`,
+    `§6--- ${shortName(villager) || info.name} §7(${info.name}) §6---`,
     `§7Doing: §f${state ?? "Just hanging around"}`,
   ];
   if (ws) lines.push(`§7Workstation: §f${ws.x}, ${ws.y}, ${ws.z}`);

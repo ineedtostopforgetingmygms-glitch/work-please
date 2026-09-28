@@ -6,6 +6,7 @@ import { CFG, PROP_BIOME } from "./config.js";
 import { debugLog } from "./debug.js";
 import { vAdd } from "./inventory.js";
 import { getInventory } from "./util.js";
+import { nameOf, setName } from "./names.js";
 
 const DP_HELD = "iv:held"; // on the zombie villager: {items: [{id, n, d}], name, biome, xp}
 const ZOMBIE_VILLAGERS = ["minecraft:zombie_villager_v2", "minecraft:zombie_villager"];
@@ -53,7 +54,7 @@ export function zombify(ev) {
   const loc = { ...dead.location };
   const info = {};
   try {
-    info.name = dead.nameTag;
+    info.name = nameOf(dead);
     info.biome = dead.getProperty(PROP_BIOME);
     info.xp = dead.getDynamicProperty("iv:xp");
   } catch {}
@@ -145,7 +146,7 @@ export function restoreCured(villager) {
     } catch {}
   }
   try {
-    if (h.name) villager.nameTag = h.name;
+    if (h.name) setName(villager, h.name); // (the main loop puts it over his head with his job)
     if (typeof h.biome === "number") villager.setProperty(PROP_BIOME, h.biome);
     if (typeof h.xp === "number") villager.setDynamicProperty("iv:xp", h.xp);
     villager.setDynamicProperty("iv:init", true); // no second helping of starting emeralds

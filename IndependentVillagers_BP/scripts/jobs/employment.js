@@ -7,6 +7,7 @@ import { holdItem } from "../actions.js";
 import { navStop } from "../nav.js";
 import { debugLog } from "../debug.js";
 import { center, particle, playSound } from "../util.js";
+import { updateTag } from "../names.js";
 
 /** @returns {{d:string,x:number,y:number,z:number}|undefined} */
 export function getWorkstation(villager) {
@@ -28,16 +29,12 @@ export function ownsWorkstation(villager, ws) {
   return !owner || owner === villager.id;
 }
 
-function isDefaultNameTag(tag) {
-  return !tag || Object.values(PROFESSION_INFO).some((p) => p.nameTag === tag);
-}
-
 export function employ(villager, dim, brain, pos, profession) {
   releaseAllClaims(villager.id);
   claim(dim.id, pos, villager.id);
   villager.setDynamicProperty(DP_WORKSTATION, JSON.stringify({ d: dim.id, x: pos.x, y: pos.y, z: pos.z }));
   villager.setProperty(PROP_PROFESSION, profession);
-  if (isDefaultNameTag(villager.nameTag)) villager.nameTag = PROFESSION_INFO[profession].nameTag;
+  updateTag(villager); // same name, new job on the line underneath
 
   const head = { x: villager.location.x, y: villager.location.y + 2.1, z: villager.location.z };
   for (let i = 0; i < 5; i++) particle(dim, "minecraft:villager_happy", head);
@@ -59,7 +56,7 @@ export function unemploy(villager, dim, brain, upset = false) {
   villager.setProperty(PROP_PROFESSION, Profession.NONE);
   setWorking(villager, false);
   holdItem(villager, undefined);
-  if (isDefaultNameTag(villager.nameTag)) villager.nameTag = "";
+  updateTag(villager);
 
   if (upset) {
     particle(dim, "minecraft:villager_angry", { x: villager.location.x, y: villager.location.y + 2.1, z: villager.location.z });

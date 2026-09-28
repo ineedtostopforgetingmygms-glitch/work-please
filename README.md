@@ -106,6 +106,21 @@ within 64 blocks for 45 seconds, even ones it can't see.
 only when they can afford it and still have plenty left: 64 spare emeralds for iron, 128 for
 diamond.
 
+## Names (v1.11)
+
+Every villager has a name, shown over his head with his job on the line underneath:
+
+```
+Chester
+Miner
+```
+
+There are 1000 names (`scripts/names_data.js`, made by `tools/gen_names.py`). They're handed
+out in turn, in an order shuffled for each world, so no two villagers share a name until all 1000
+have been used. Changing jobs only changes the second line; he keeps his name. Rename a villager
+with a name tag and that becomes his name (his job still shows underneath). A villager killed by a
+zombie keeps his name as a zombie villager, and has it again when he's cured.
+
 ## Everyone (v1.10)
 
 - **Running from monsters comes first.** A zombie (or any monster) close by and in sight, or one

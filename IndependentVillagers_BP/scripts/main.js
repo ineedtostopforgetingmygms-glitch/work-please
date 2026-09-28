@@ -32,6 +32,7 @@ import { bellRung, wakeIfNeeded, wakeUp } from "./jobs/rest.js";
 import { dangerCheck } from "./threat.js";
 import { fieldClaims, releaseFields } from "./jobs/fields.js";
 import { zombify } from "./zombie.js";
+import { updateTag } from "./names.js";
 import { bottleXp, xpOf } from "./xp.js";
 
 // profession -> brain function. New jobs plug in here.
@@ -107,10 +108,12 @@ system.runInterval(() => {
           brain.fresh = false;
           cleanupStaleMarker(villager);
           initVillager(villager); // starting emeralds (once per villager)
+          updateTag(villager); // his name, and his job underneath
         }
         if (now >= (brain.nextTradeCheck ?? 0)) {
           brain.nextTradeCheck = now + 100;
           updateTradeTable(villager); // offers always match what's in his shop row
+          updateTag(villager); // (a nitwit made one by the vanilla swap, a name tag used on him...)
         }
         if (now >= (brain.nextBottle ?? 0)) {
           brain.nextBottle = now + XP.BOTTLE_EVERY;

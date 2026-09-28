@@ -12,6 +12,8 @@ export function isDebug() {
 
 export function debugLog(entity, msg) {
   if (!enabled) return;
-  const tag = entity ? `${entity.nameTag || "villager"}#${String(entity.id).slice(-4)}` : "iv";
+  // "Chester (Miner)#1017" - his name, his job, and the end of his id
+  const [name, job] = (entity?.nameTag ?? "").split("\n");
+  const tag = entity ? `${job ? `${job.replace(/§./g, "")} ` : ""}${name || "villager"}#${String(entity.id).slice(-4)}` : "iv";
   console.warn(`[IV] ${tag}: ${msg}`);
 }

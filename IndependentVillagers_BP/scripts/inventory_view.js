@@ -12,6 +12,7 @@ import { peekBrain, stateLabel } from "./brain.js";
 import { getTool } from "./actions.js";
 import { isCreative } from "./inspect.js";
 import { getInventory, isValid, prettyName } from "./util.js";
+import { shortName } from "./names.js";
 
 export const VIEW_ID = "iv:inventory_view";
 
@@ -95,7 +96,7 @@ function statusLine(villager) {
   const prof = villager.getProperty(PROP_PROFESSION) ?? Profession.NONE;
   const state = stateLabel(peekBrain(villager.id));
   const tools = [getTool(villager, "axe")?.id, getTool(villager, "pickaxe")?.id, getTool(villager, "hoe")?.id].filter(Boolean).map(prettyName);
-  return `§6${villager.nameTag || PROFESSION_INFO[prof]?.name}§r - ${state ?? "resting"} §7| tools: ${tools.join(", ") || "none"} | bottom row = shop stock`;
+  return `§6${shortName(villager) || PROFESSION_INFO[prof]?.name}§r - ${state ?? "resting"} §7| tools: ${tools.join(", ") || "none"} | bottom row = shop stock`;
 }
 
 system.runInterval(() => {
