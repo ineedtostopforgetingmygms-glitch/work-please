@@ -12,6 +12,7 @@ import { debugLog } from "../debug.js";
 import { placeBlock } from "../actions.js";
 import { canUse, center, floorPos, getBlock, isPassable, isSolidGround, offset, playSound, posKey, ringOffsets, samePos } from "../util.js";
 import { walkTo } from "./common.js";
+import { forgetFurnaces } from "./smelting.js";
 
 const TABLE = "minecraft:crafting_table";
 const DOORISH = /(_door|fence_gate)$/;
@@ -107,6 +108,7 @@ export function putDown(villager, dim, brain, now, anchor, typeId, sound = "use.
   }
   brain.placeAt = null;
   if (!placeBlock(villager, dim, spot, typeId, sound)) return undefined;
+  if (/furnace|smoker/.test(typeId)) forgetFurnaces();
   return spot;
 }
 

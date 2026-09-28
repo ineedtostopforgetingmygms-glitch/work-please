@@ -106,6 +106,29 @@ within 64 blocks for 45 seconds, even ones it can't see.
 only when they can afford it and still have plenty left: 64 spare emeralds for iron, 128 for
 diamond.
 
+## Performance and movement (v1.13)
+
+- **Much less work per tick.** In the test village of 20 villagers, the scripts now ask the game
+  for about 12 times fewer blocks (roughly 8,200 down to 650 a tick), and script time dropped from
+  about 2 ms a tick to 0.2 ms. The biggest savings:
+  - **Shared route memory:** all villagers share one memory of the ground they plan routes over,
+    instead of each re-checking every block. Route searching has a village-wide budget per tick.
+  - **Lumberjacks** stop re-searching the whole forest after every break when there are no trees.
+  - **Farmers** look over their farmland in slices and only re-check the land they already know.
+  - **Jobless villagers** standing together share one look for free job blocks.
+  - **Bed counting** (for babies), **wood, grass and wild sugar cane searches** look down each
+    column from the top instead of block by block, and remember what they found.
+  - **Danger checks** are spread out so the whole village doesn't check on the same tick.
+  - **The vanilla walking goal** looks for its next step in a much smaller box.
+- **Walking, not running.** Villagers walk to their jobs. They only run (a speed boost) when
+  they're running from a monster or rushing to tell an iron golem.
+- **Getting round each other:** routes steer around spots where other villagers are standing, and
+  a walker steps aside for someone right in front of him.
+- **Steps:** a villager pressed up against a step now hops up it straight away, instead of
+  standing there a few seconds until the stuck check notices.
+- **Lumberjacks leave farms alone:** the log border round a village farm isn't a fallen tree. Logs
+  touching farmland or crops, or lying next to water, are never chopped.
+
 ## Village life (v1.12)
 
 Every villager runs on the same simple routine:
@@ -254,4 +277,5 @@ node tools/sim/run.mjs shore|well|wild2|tools   # cartographer + armorer
 node tools/sim/mine.mjs 60000 3                   # three miners sharing one mine
 node tools/sim/village.mjs 30000                  # butcher, nitwit + golem, zombies, armorer's golem
 node tools/sim/village2.mjs 15000                 # Workshop + houses, babies, telling on a player, running home
+node tools/sim/perf.mjs 12000                     # 20 villagers: how much they ask of the game each tick
 ```

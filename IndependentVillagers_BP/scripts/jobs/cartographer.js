@@ -328,7 +328,9 @@ function plan(villager, dim, brain, now, ws) {
 
   // 3. nothing planted and nothing to plant: find some cane to get started
   if (!st.planted && !cane) {
-    if (findWildCane(dim, ws, patch)) {
+    const wildCane = (brain.noWildUntil ?? 0) <= now && findWildCane(dim, ws, patch);
+    if (!wildCane) brain.noWildUntil = now + 20 * 60 * 3; // (a big look round - not every few seconds)
+    if (wildCane) {
       brain.job = { wild: { started: now } };
       return setState(villager, brain, "wild");
     }
@@ -422,28 +424,28 @@ function compassPlan(villager, dim, brain, now, ws, inv, stock) {
 
 // ================================================================ getting started: wild cane
 
-/** The nearest wild sugar cane around his table that isn't in his own patch. */
+const WILD_COLUMNS = ringOffsets(0, CARTO.WILD_RADIUS, [0]);
+
+/**
+ * The nearest wild sugar cane around his table that isn't in his own patch: the bottom block of
+ * it. Cane grows out in the open, so one look down each column from the sky finds it.
+ */
 function findWildCane(dim, ws, patch, bad) {
   const mine = new Set((patch?.spots ?? []).map((g) => k(offset(g, 0, 1, 0))));
-  const r = CARTO.WILD_RADIUS;
-  let best;
-  let bestD = Infinity;
-  for (let dx = -r; dx <= r; dx++) {
-    for (let dz = -r; dz <= r; dz++) {
-      const d = dx * dx + dz * dz;
-      if (d >= bestD) continue;
-      for (let dy = -6; dy <= 6; dy++) {
-        const p = { x: ws.x + dx, y: ws.y + dy, z: ws.z + dz };
-        if (!CANE_BLOCKS.has(getBlock(dim, p)?.typeId ?? "")) continue;
-        if (CANE_BLOCKS.has(getBlock(dim, offset(p, 0, -1, 0))?.typeId ?? "")) continue; // not the bottom
-        if (mine.has(k(p)) || bad?.has(k(p))) break;
-        best = p;
-        bestD = d;
-        break;
-      }
+  for (const o of WILD_COLUMNS) {
+    let top;
+    try {
+      top = dim.getTopmostBlock({ x: ws.x + o.x, z: ws.z + o.z });
+    } catch {
+      continue;
     }
+    if (!top || !CANE_BLOCKS.has(top.typeId) || Math.abs(top.y - ws.y) > 8) continue;
+    let p = { x: top.x, y: top.y, z: top.z };
+    while (CANE_BLOCKS.has(getBlock(dim, offset(p, 0, -1, 0))?.typeId ?? "")) p = offset(p, 0, -1, 0);
+    if (mine.has(k(p)) || bad?.has(k(p))) continue;
+    return p;
   }
-  return best;
+  return undefined;
 }
 
 /** Cuts wild cane: the top of it, leaving the bottom to grow back (all of it if it's a stub). */
@@ -468,7 +470,9 @@ function wild(villager, dim, brain, now, ws) {
     brain.job = null;
     return setState(villager, brain, "plan");
   }
-  const base = findWildCane(dim, ws, getPatch(villager, dim), job.bad);
+  // (the same clump as last time if it's still there - the big look round only when it's gone)
+  const still = job.target && CANE_BLOCKS.has(getBlock(dim, job.target)?.typeId ?? "") && !job.bad?.has(k(job.target));
+  const base = still ? job.target : findWildCane(dim, ws, getPatch(villager, dim), job.bad);
   if (!base) {
     debugLog(villager, `no more wild sugar cane about - got ${vCount(inv, isCane)}`);
     brain.job = null;

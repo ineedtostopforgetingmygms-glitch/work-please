@@ -13,7 +13,7 @@ import { debugLog } from "../debug.js";
 import { getTool, holdItem, pickupItems, startBreak, updateBreak, wearTool } from "../actions.js";
 import { navTo, navUpdate } from "../nav.js";
 import { vCount } from "../inventory.js";
-import { analyzeTree } from "../trees.js";
+import { analyzeTree, trunkInColumn } from "../trees.js";
 import { canUse, center, dist, findStandableNear, floorPos, getBlock, getInventory, isStandable, lookAt, offset, ringOffsets } from "../util.js";
 
 const isLog = (id) => LOGS.has(id);
@@ -43,19 +43,16 @@ function stepTreeScan(villager, dim, brain, origin) {
   const end = Math.min(COLUMNS.length, s.i + CFG.WOOD.SCAN_PER_THINK);
   for (; s.i < end; s.i++) {
     const o = COLUMNS[s.i];
-    for (let dy = 6; dy >= -6; dy--) {
-      const p = { x: origin.x + o.x, y: origin.y + dy, z: origin.z + o.z };
-      const b = getBlock(dim, p);
-      if (!b || !isLog(b.typeId)) continue;
-      if (brain.badTrees?.has(k(p))) continue;
-      const tree = analyzeTree(dim, p);
-      if (!tree.ok) {
-        (brain.badTrees ??= new Set()).add(k(p));
-        continue;
-      }
-      brain.woodScan = null;
-      return tree;
+    // down the column from the sky to the first log (one look per column, like the lumberjack's scan)
+    const p = trunkInColumn(dim, origin.x + o.x, origin.z + o.z, origin.y);
+    if (!p || Math.abs(p.y - origin.y) > 6 || brain.badTrees?.has(k(p))) continue;
+    const tree = analyzeTree(dim, p);
+    if (!tree.ok) {
+      (brain.badTrees ??= new Set()).add(k(p));
+      continue;
     }
+    brain.woodScan = null;
+    return tree;
   }
   if (s.i >= COLUMNS.length) {
     brain.woodScan = null;

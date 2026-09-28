@@ -1,7 +1,7 @@
 // Unemployed villagers wander and look for a free workstation block to claim - and if the village
 // hasn't got one going spare, they make their own: a villager who's been out of work for a while
 // goes and cuts four logs, finds a crafting table (or makes one) and puts up a Woodcutter's Bench.
-import { world } from "@minecraft/server";
+import { system, world } from "@minecraft/server";
 import { CFG, LOGS, PROFESSION_INFO, Profession } from "../config.js";
 import { setMode, setState, setWorking, sleep } from "../brain.js";
 import { debugLog } from "../debug.js";
@@ -43,27 +43,55 @@ export function unemployedThink(villager, dim, brain, now) {
   selfEmploy(villager, dim, brain, now);
 }
 
+// Job blocks found round a spot, shared by every jobless villager standing about there for a few
+// seconds (a look round is a few thousand blocks - no need for each of them to do it)
+const jobBlockCache = new Map(); // "dim|cell" -> {at, list: [{pos, profession}]}
+const CELL = 8;
+
+function jobBlocksAround(dim, o) {
+  const cx = Math.floor(o.x / CELL);
+  const cy = Math.floor(o.y / 4);
+  const cz = Math.floor(o.z / CELL);
+  const key = `${dim.id}|${cx}|${cy}|${cz}`;
+  const now = system.currentTick;
+  const c = jobBlockCache.get(key);
+  if (c && now - c.at < CFG.JOB_SCAN_EVERY * 2) return c.list;
+  // everything within JOB_SCAN_RADIUS of anywhere in this cell
+  const r = CFG.JOB_SCAN_RADIUS + CELL;
+  const mid = { x: cx * CELL + CELL / 2, y: cy * 4 + 2, z: cz * CELL + CELL / 2 };
+  const list = [];
+  for (let dy = -4; dy <= 4; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dz = -r; dz <= r; dz++) {
+        const pos = { x: Math.floor(mid.x + dx), y: mid.y + dy, z: Math.floor(mid.z + dz) };
+        const profession = WORKSTATIONS[getBlock(dim, pos)?.typeId ?? ""];
+        if (profession !== undefined) list.push({ pos, profession });
+      }
+    }
+  }
+  if (jobBlockCache.size > 128) jobBlockCache.clear();
+  jobBlockCache.set(key, { at: now, list });
+  return list;
+}
+
 /** The nearest free job block he can actually see - not one through the wall of a house. */
 function findFreeWorkstation(dim, villager, location) {
   const o = floorPos(location);
   const r = CFG.JOB_SCAN_RADIUS;
   let best;
   let bestD = Infinity;
-  for (let dy = -3; dy <= 3; dy++) {
-    for (let dx = -r; dx <= r; dx++) {
-      for (let dz = -r; dz <= r; dz++) {
-        const d = dx * dx + dz * dz + dy * dy;
-        if (d >= bestD) continue;
-        const pos = { x: o.x + dx, y: o.y + dy, z: o.z + dz };
-        const block = getBlock(dim, pos);
-        if (!block) continue;
-        const profession = WORKSTATIONS[block.typeId];
-        if (profession === undefined || !isFree(dim, pos)) continue;
-        if (!canSee(dim, villager, pos)) continue; // he has to be able to see it from here
-        best = { pos, profession };
-        bestD = d;
-      }
-    }
+  for (const { pos, profession } of jobBlocksAround(dim, o)) {
+    const dx = pos.x - o.x;
+    const dy = pos.y - o.y;
+    const dz = pos.z - o.z;
+    if (Math.abs(dx) > r || Math.abs(dz) > r || Math.abs(dy) > 3) continue;
+    const d = dx * dx + dz * dz + dy * dy;
+    if (d >= bestD) continue;
+    if (WORKSTATIONS[getBlock(dim, pos)?.typeId ?? ""] !== profession) continue; // (gone since)
+    if (!isFree(dim, pos)) continue;
+    if (!canSee(dim, villager, pos)) continue; // he has to be able to see it from here
+    best = { pos, profession };
+    bestD = d;
   }
   return best;
 }

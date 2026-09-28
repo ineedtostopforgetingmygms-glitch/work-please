@@ -168,7 +168,7 @@ export function tattleCheck(villager, dim, brain, now) {
   brain.fast = true;
   if (now % 40 < 4) {
     try {
-      villager.addEffect("speed", 60, { amplifier: 1, showParticles: false });
+      villager.addEffect("speed", 60, { amplifier: 2, showParticles: false }); // (he walks otherwise)
     } catch {}
   }
   if (horizDist(villager.location, golem.location) <= 3.5 && Math.abs(villager.location.y - golem.location.y) < 3) {

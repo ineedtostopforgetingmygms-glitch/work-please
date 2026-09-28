@@ -1,7 +1,7 @@
 // Using a furnace like a player: put the goods in the top slot, fuel underneath, wait for it to
 // burn (10 seconds an item) and take the result out. Shared by the miner (logs -> charcoal), the
 // farmer (raw iron -> iron ingots) and the armorer (ores in his blast furnace, charcoal in a furnace).
-import { ItemStack } from "@minecraft/server";
+import { ItemStack, system } from "@minecraft/server";
 import { CFG, LOGS } from "../config.js";
 import { debugLog } from "../debug.js";
 import { addXp } from "../xp.js";
@@ -17,6 +17,25 @@ export const BLAST_FURNACES = ["minecraft:blast_furnace", "minecraft:lit_blast_f
  * (see workshop.js), so he never builds a second one he can't find.
  */
 export function furnaceNear(dim, ws, radius = CFG.WORK.PLACE_RADIUS, kinds = FURNACES) {
+  // (a few hundred blocks to look through, asked every think: remembered for a few seconds)
+  const key = `${dim.id}|${ws.x},${ws.y},${ws.z}|${radius}|${kinds[0]}`;
+  const now = system.currentTick;
+  const seen = furnaceCache.get(key);
+  if (seen && now - seen.at < 100 && (!seen.pos || kinds.includes(getBlock(dim, seen.pos)?.typeId))) return seen.pos;
+  const pos = findFurnace(dim, ws, radius, kinds);
+  if (furnaceCache.size > 256) furnaceCache.clear();
+  furnaceCache.set(key, { at: now, pos });
+  return pos;
+}
+
+const furnaceCache = new Map();
+
+/** Somebody put a furnace down: forget every "no furnace here". */
+export function forgetFurnaces() {
+  furnaceCache.clear();
+}
+
+function findFurnace(dim, ws, radius, kinds) {
   let best;
   let bestD = Infinity;
   for (let dy = -2; dy <= 2; dy++)

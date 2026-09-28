@@ -8,10 +8,36 @@ import { system, world } from "@minecraft/server";
 import { CFG, DP_NAV } from "./config.js";
 import { setMode } from "./brain.js";
 import { debugLog } from "./debug.js";
-import { PathSearch } from "./pathfind.js";
+import { PathSearch, takeBudget } from "./pathfind.js";
 import { center, dist, findStandableNear, floorPos, getBlock, horizDist, isPassable, isStandable, offset, playSound, samePos } from "./util.js";
 
 const slotOwners = new Map(); // slot -> villager id
+
+// ---------------------------------------------------------------- where everybody is
+// The main loop tells us where every villager is (every couple of ticks), so routes can go round
+// other villagers and walkers can step aside for each other.
+const crowd = new Map(); // dimId -> [{id, x, y, z}]
+
+export function noteVillagers(dimId, villagers) {
+  const list = [];
+  for (const v of villagers) {
+    try {
+      const l = v.location;
+      list.push({ id: v.id, x: l.x, y: l.y, z: l.z });
+    } catch {}
+  }
+  crowd.set(dimId, list);
+}
+
+/** The spots (feet blocks) other villagers near `loc` are standing on, as "x,y,z" keys. */
+function othersAround(dimId, selfId, loc, r = 24) {
+  const out = new Set();
+  for (const o of crowd.get(dimId) ?? []) {
+    if (o.id === selfId || Math.abs(o.x - loc.x) > r || Math.abs(o.z - loc.z) > r) continue;
+    out.add(`${Math.floor(o.x)},${Math.floor(o.y)},${Math.floor(o.z)}`);
+  }
+  return out;
+}
 const activeMarkers = new Map(); // villager id -> {dimId, pos, slot}
 
 // ---------------------------------------------------------------- manual walking
@@ -46,10 +72,22 @@ function steer(villager, nav) {
   const len = Math.sqrt(dx * dx + dz * dz);
   if (len < 0.05) return;
 
-  const speed = nav.fast ? 0.3 : 0.2; // running from something, or a nitwit with news
+  // a walk - he only runs when he's running from something (or a nitwit with news)
+  const speed = nav.fast ? CFG.RUN_SPEED : CFG.WALK_SPEED;
   const v = villager.getVelocity();
-  const ix = (dx / len) * Math.min(speed, len * 0.5) - v.x;
-  const iz = (dz / len) * Math.min(speed, len * 0.5) - v.z;
+  let ix = (dx / len) * Math.min(speed, len * 0.5) - v.x;
+  let iz = (dz / len) * Math.min(speed, len * 0.5) - v.z;
+  // step aside for anybody right in front of him instead of walking into them
+  for (const o of crowd.get(villager.dimension.id) ?? []) {
+    if (o.id === villager.id) continue;
+    const ox = loc.x - o.x;
+    const oz = loc.z - o.z;
+    const d2 = ox * ox + oz * oz;
+    if (d2 > 0.81 || d2 < 1e-4 || Math.abs(o.y - loc.y) > 1.5) continue;
+    const d = Math.sqrt(d2);
+    ix += (ox / d) * 0.04;
+    iz += (oz / d) * 0.04;
+  }
   // doors in the way get opened, like a player would (the vanilla goal isn't running right now)
   openDoorsAhead(villager, loc, dx / len, dz / len);
   // jump for a step up (stairs and slabs included), or when pushing against something without
@@ -218,10 +256,11 @@ function startSearch(villager, nav) {
   const dim = villager.dimension;
   let start = floorPos(villager.location);
   if (!isStandable(dim, start)) start = findStandableNear(dim, start, 1, 1) ?? start;
-  nav.search = new PathSearch(dim, start, nav.goal);
+  nav.search = new PathSearch(dim, start, nav.goal, { avoid: othersAround(dim.id, villager.id, villager.location) });
   nav.path = null;
   nav.idx = 0;
-  nav.search.step(CFG.PATH_BUDGET);
+  const budget = takeBudget(CFG.PATH_BUDGET);
+  if (budget > 0) nav.search.step(budget);
 }
 
 /**
@@ -349,9 +388,12 @@ export function navUpdate(villager, brain, now) {
   const nav = brain.nav;
   if (!nav) return "failed";
 
-  // still planning the route
+  // still planning the route (sharing the village's search budget: if it's used up this tick,
+  // he waits for the next)
   if (nav.search) {
-    const s = nav.search.step(CFG.PATH_BUDGET);
+    const budget = takeBudget(CFG.PATH_BUDGET);
+    if (budget <= 0 && nav.search.status === "running") return "moving";
+    const s = nav.search.step(budget);
     if (s === "running") return "moving";
     if (s === "failed" && !usePartial(villager, nav)) {
       debugLog(villager, `nav: no path to ${nav.goal.x} ${nav.goal.y} ${nav.goal.z} (searched ${nav.search.expanded} spots)`);
@@ -404,6 +446,10 @@ export function navUpdate(villager, brain, now) {
   const wc = center(nav.waypoint ?? goal);
   const d = dist(loc, wc);
 
+  // pressed up against a step and not getting up it: a hop, straight away (instead of standing
+  // there until the stuck check gives up on the vanilla walking a few seconds later)
+  if (!nav.manual && nav.path) stepNudge(villager, nav, now, loc);
+
   // Two ways of noticing he's getting nowhere: no closer to the next hop, or (the one that used to
   // leave a villager jittering against a tree for minutes on end) barely moving at all.
   let why;
@@ -449,6 +495,26 @@ export function navUpdate(villager, brain, now) {
     }
   }
   return "moving";
+}
+
+function stepNudge(villager, nav, now, loc) {
+  const moved = !nav.nudgePos || horizDist(loc, nav.nudgePos) > 0.15;
+  if (moved) {
+    nav.nudgePos = { x: loc.x, y: loc.y, z: loc.z };
+    nav.nudgeAt = now;
+    return;
+  }
+  if (now - nav.nudgeAt < 8 || now - (nav.lastJump ?? -100) < JUMP_GAP) return;
+  const next = nav.path[Math.min(nav.path.length - 1, nav.idx + 1)];
+  const h = headingTo(villager, next);
+  if (!h) return;
+  if (!(next.y > loc.y + 0.4 || stepUpAhead(villager, loc, h.nx, h.nz))) return;
+  try {
+    if (!villager.isOnGround) return;
+    villager.applyImpulse({ x: h.nx * 0.1, y: 0.42, z: h.nz * 0.1 });
+    nav.lastJump = now;
+    nav.nudgeAt = now;
+  } catch {}
 }
 
 export function navStop(villager, brain) {

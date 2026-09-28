@@ -6,7 +6,7 @@ import { CFG, DIMENSIONS, LEAVES, LOGS, PROFESSION_INFO, PROP_PROFESSION, Profes
 import { allBrains, forgetBrain, getBrain, pruneBrains, stateLabel } from "./brain.js";
 import { releaseAllClaims } from "./registry.js";
 import { registerPlacedTracking } from "./placed.js";
-import { cleanupStaleMarker, navForget, navStop, navTo, navUpdate } from "./nav.js";
+import { cleanupStaleMarker, navForget, navStop, navTo, navUpdate, noteVillagers } from "./nav.js";
 import { getTool } from "./actions.js";
 import { analyzeTree, compareScans } from "./trees.js";
 import { debugLog, isDebug, setDebug } from "./debug.js";
@@ -64,6 +64,7 @@ system.runInterval(() => {
     } catch {
       continue;
     }
+    noteVillagers(dimId, villagers); // where everybody is: routes go round each other
     for (const villager of villagers) {
       const brain = getBrain(villager);
       if (brain.debugGoto) {
@@ -117,9 +118,12 @@ system.runInterval(() => {
           noteVillage(dim, villager.location); // (villages from before v1.12 get their Workshop too)
         }
         if (now >= (brain.nextTradeCheck ?? 0)) {
-          brain.nextTradeCheck = now + 100;
+          brain.nextTradeCheck = now + 160 + Math.floor(Math.random() * 40); // (spread out, not all at once)
           updateTradeTable(villager); // offers always match what's in his shop row
-          updateTag(villager); // (a nitwit made one by the vanilla swap, a name tag used on him...)
+          if (now >= (brain.nextTag ?? 0)) {
+            brain.nextTag = now + 600;
+            updateTag(villager); // (a nitwit made one by the vanilla swap, a name tag used on him...)
+          }
         }
         if (now >= (brain.nextBottle ?? 0)) {
           brain.nextBottle = now + XP.BOTTLE_EVERY;

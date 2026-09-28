@@ -78,7 +78,7 @@ function topBlock(dim, x, z) {
  * it, and any smaller tree's leaves further down - and returns the bottom of the first log column
  * it meets. (Only stopping at the first canopy missed every smaller tree growing under a big one.)
  */
-function trunkInColumn(dim, x, z, refY) {
+export function trunkInColumn(dim, x, z, refY) {
   let b = topBlock(dim, x, z);
   for (let i = 0; i < 64 && b; i++) {
     const id = b.typeId;
@@ -160,6 +160,7 @@ export function analyzeTree(dim, start) {
   const faceSeen = new Set();
   const queue = [s];
   let naturalLeaves = 0;
+  let wet = false;
 
   while (queue.length) {
     const p = queue.shift();
@@ -194,6 +195,9 @@ export function analyzeTree(dim, start) {
         continue;
       }
       if (id === species || LOGS.has(id)) continue;
+      // the log border round a village farm (and nothing natural ever grows up against farmland)
+      if (FARMISH.test(id)) return { ok: false, reason: `${id} touches log at ${fmt(p)} - part of a farm` };
+      if (b.isLiquid) wet = true;
       if (BUILD_BLOCK.test(id) && !BUILD_BLOCK_EXCEPTIONS.has(id)) {
         return { ok: false, reason: `${id} touches log at ${fmt(p)} - part of a build` };
       }
@@ -206,9 +210,10 @@ export function analyzeTree(dim, start) {
 
   // Fallen trees (natural forest decoration: a log lying on the ground + a short stump nearby) have
   // no leaves, so they get their own, equally strict, check.
-  if (naturalLeaves < CFG.MIN_TREE_LEAVES) {
+  // (a leafless log lying in a line next to water is a farm's edge, not a fallen tree)
+  if (naturalLeaves < CFG.MIN_TREE_LEAVES && !wet) {
     const fallen = fallenTree(dim, species, logs, get);
-    if (fallen) return fallen;
+    if (fallen && !nearFarm(dim, logs, get)) return fallen;
   }
 
   // (1-2 logs with natural leaves is fine: jungle bushes are a single log under a ball of leaves)
@@ -283,6 +288,23 @@ function fallenTree(dim, species, logs, get) {
   if (!logs.every((l) => l.y === y && l[across] === logs[0][across] && axisOf(l) === axis)) return undefined;
   if (!logs.some(onGround)) return undefined;
   return { ok: true, species, logs, base: logs, leaves: 0, fallen: "log" };
+}
+
+// crops and farmland: logs next to these are a farm's border
+const FARMISH = /farmland|wheat|carrots|potatoes|beetroot|pumpkin_stem|melon_stem|torchflower_crop|pitcher_crop|composter/;
+
+/** Farmland within a couple of blocks of these logs (a village farm's log border, a crop bed). */
+function nearFarm(dim, logs, get) {
+  for (const l of logs) {
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dz = -2; dz <= 2; dz++) {
+        for (let dy = -1; dy <= 0; dy++) {
+          if (FARMISH.test(get({ x: l.x + dx, y: l.y + dy, z: l.z + dz })?.typeId ?? "")) return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 function safeState(block, name) {

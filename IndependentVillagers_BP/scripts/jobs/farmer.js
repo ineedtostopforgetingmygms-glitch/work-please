@@ -103,31 +103,81 @@ const isRipe = (block) => {
   }
 };
 
-/** Farmland and crops within FARM.RADIUS of his composter: what needs harvesting and sowing. */
-function lookAround(dim, ws) {
+// Every column round his composter, nearest first (for the slow look for farmland)
+const FIELD_COLUMNS = [];
+for (let dx = -FARM.RADIUS; dx <= FARM.RADIUS; dx++) for (let dz = -FARM.RADIUS; dz <= FARM.RADIUS; dz++) FIELD_COLUMNS.push({ dx, dz });
+
+/** The farmland in this column near his height, if there is any. */
+function farmlandIn(dim, x, z, y0) {
+  let top;
+  try {
+    top = dim.getTopmostBlock({ x, z });
+  } catch {
+    return undefined;
+  }
+  if (!top) return undefined;
+  // usually the crop (or the farmland itself) is the top block: one look instead of nine
+  if (top.y <= y0 + 5 && top.y >= y0 - 5) {
+    if (top.typeId === "minecraft:farmland") return { x, y: top.y, z };
+    const under = top.below();
+    if (under?.typeId === "minecraft:farmland") return { x, y: under.y, z };
+    if (top.y > y0 - 4) return undefined;
+  }
+  // under a roof or a tree: look down the column near his own height
+  for (let dy = -4; dy <= 4; dy++) {
+    if (getBlock(dim, { x, y: y0 + dy, z })?.typeId === "minecraft:farmland") return { x, y: y0 + dy, z };
+  }
+  return undefined;
+}
+
+/**
+ * Where the farmland is round his composter. The full look (thousands of columns) is done a slice
+ * at a time and only every FARM.RESCAN; in between the farmland he knows about is all he checks.
+ * Returns the farmland list, or undefined while the first look is still going.
+ */
+function knownLand(dim, brain, ws, now) {
+  const L = (brain.landScan ??= { land: null, fullAt: -1e9 });
+  if (!L.land || now - L.fullAt > FARM.RESCAN) {
+    const scan = (L.scan ??= { i: 0, land: [] });
+    const end = Math.min(FIELD_COLUMNS.length, scan.i + FARM.SCAN_PER_THINK);
+    for (; scan.i < end; scan.i++) {
+      const c = FIELD_COLUMNS[scan.i];
+      const p = farmlandIn(dim, ws.x + c.dx, ws.z + c.dz, ws.y);
+      if (p) scan.land.push(p);
+    }
+    if (scan.i >= FIELD_COLUMNS.length) {
+      L.land = scan.land;
+      L.fullAt = now;
+      L.scan = null;
+      brain.fields = null;
+    }
+  }
+  return L.land ?? undefined;
+}
+
+/** What needs doing on the farmland he knows about: ripe crops to harvest, bare soil to sow. */
+function lookAround(dim, landList) {
   const ripe = [];
   const bare = [];
   const land = [];
-  for (let dx = -FARM.RADIUS; dx <= FARM.RADIUS; dx++) {
-    for (let dz = -FARM.RADIUS; dz <= FARM.RADIUS; dz++) {
-      for (let dy = -4; dy <= 4; dy++) {
-        const p = { x: ws.x + dx, y: ws.y + dy, z: ws.z + dz };
-        const b = getBlock(dim, p);
-        if (b?.typeId !== "minecraft:farmland") continue;
-        land.push(p);
-        const above = getBlock(dim, offset(p, 0, 1, 0));
-        if (!above) break;
-        if (STEMS.has(above.typeId)) {
-          // a pumpkin or melon grown on the block beside the stem
-          for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-            const q = { x: p.x + ox, y: p.y + 1, z: p.z + oz };
-            if (FRUIT.has(getBlock(dim, q)?.typeId) && !ripe.some((r) => samePos(r, q))) ripe.push(q);
-          }
-        } else if (isRipe(above)) ripe.push({ x: p.x, y: p.y + 1, z: p.z });
-        else if (above.isAir) bare.push({ x: p.x, y: p.y + 1, z: p.z });
-        break;
-      }
+  for (const p of landList) {
+    const b = getBlock(dim, p);
+    if (!b) {
+      land.push(p); // not loaded - still there as far as he knows
+      continue;
     }
+    if (b.typeId !== "minecraft:farmland") continue; // dug up / trampled
+    land.push(p);
+    const above = getBlock(dim, offset(p, 0, 1, 0));
+    if (!above) continue;
+    if (STEMS.has(above.typeId)) {
+      // a pumpkin or melon grown on the block beside the stem
+      for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const q = { x: p.x + ox, y: p.y + 1, z: p.z + oz };
+        if (FRUIT.has(getBlock(dim, q)?.typeId) && !ripe.some((r) => samePos(r, q))) ripe.push(q);
+      }
+    } else if (isRipe(above)) ripe.push({ x: p.x, y: p.y + 1, z: p.z });
+    else if (above.isAir) bare.push({ x: p.x, y: p.y + 1, z: p.z });
   }
   return { ripe, bare, land, farmland: land.length };
 }
@@ -171,7 +221,9 @@ function survey(villager, dim, brain, now, ws) {
   if (vFreeSlots(inv) <= 1 || vCount(inv, (id) => PRODUCE.has(id)) >= FARM.RETURN_AT) return setState(villager, brain, "stash");
 
   // what's around? (cached for a few seconds - it's a big look around)
-  if (!brain.fields || now - brain.fields.at > 20 * 10) brain.fields = { ...lookAround(dim, ws), at: now };
+  const landList = knownLand(dim, brain, ws, now);
+  if (!landList) return sleep(brain, 2); // (still having his first look round)
+  if (!brain.fields || now - brain.fields.at > 20 * 10) brain.fields = { ...lookAround(dim, landList), at: now };
   const field = brain.fields.land.length ? pickField(villager, dim, brain, now, ws) : undefined;
   brain.myField = field;
   // only his own field is his business - the next farmer's rows are for him to tend
@@ -396,27 +448,31 @@ function seeds(villager, dim, brain, now, ws) {
   sleep(brain, 4);
 }
 
+const GRASS_COLUMNS = ringOffsets(0, FARM.GRASS_SEARCH, [0]);
+
+/** The nearest tall grass round his composter (the same patch as last time while it lasts). */
 function findGrass(dim, villager, brain, ws) {
-  // around his composter, not around wherever he's wandered to - he stays near his patch
-  const from = ws;
   const bad = brain.badGrass;
-  let best;
-  let bestD = Infinity;
-  for (let dx = -FARM.GRASS_SEARCH; dx <= FARM.GRASS_SEARCH; dx += 1) {
-    for (let dz = -FARM.GRASS_SEARCH; dz <= FARM.GRASS_SEARCH; dz += 1) {
-      const d = dx * dx + dz * dz;
-      if (d >= bestD) continue;
-      for (let dy = -3; dy <= 3; dy++) {
-        const p = { x: from.x + dx, y: from.y + dy, z: from.z + dz };
-        if (!GRASS.has(getBlock(dim, p)?.typeId ?? "")) continue;
-        if (bad?.has(k(p))) continue;
-        best = p;
-        bestD = d;
-        break;
-      }
+  const last = brain.lastGrass;
+  if (last && GRASS.has(getBlock(dim, last)?.typeId ?? "") && !bad?.has(k(last))) return last;
+  // grass grows in the open: one look down each column from the sky, nearest first
+  for (const o of GRASS_COLUMNS) {
+    let top;
+    try {
+      top = dim.getTopmostBlock({ x: ws.x + o.x, z: ws.z + o.z });
+    } catch {
+      continue;
     }
+    if (!top || Math.abs(top.y - ws.y) > 3) continue;
+    let p = { x: top.x, y: top.y, z: top.z };
+    if (!GRASS.has(top.typeId)) continue;
+    // (tall grass is two blocks: the bottom one)
+    if (GRASS.has(getBlock(dim, offset(p, 0, -1, 0))?.typeId ?? "")) p = offset(p, 0, -1, 0);
+    if (bad?.has(k(p))) continue;
+    brain.lastGrass = p;
+    return p;
   }
-  return best;
+  return undefined;
 }
 
 // ================================================================ craft & smelt
@@ -694,6 +750,7 @@ function build(villager, dim, brain, now, ws) {
   brain.farmPlan = null;
   brain.job = null;
   brain.fields = null;
+  brain.landScan = null; // (new farmland: look again)
   setState(villager, brain, "survey");
 }
 

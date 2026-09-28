@@ -5,6 +5,7 @@ import { setWorking } from "./brain.js";
 import { GEN_END, vAdd, vGive } from "./inventory.js";
 import { canSee, center, getBlock, getInventory, lookAt, playSound } from "./util.js";
 import { addXp, oreXp } from "./xp.js";
+import { invalidateCell } from "./pathfind.js";
 
 // ---------------------------------------------------------------- tools
 // The axe is a real item in the villager's inventory (with real durability). The one in his hand
@@ -151,6 +152,7 @@ export function updateBreak(villager, dim, brain, now) {
     block.setType("minecraft:air");
   }
   if (!a.noDrop) addXp(villager, oreXp(a.id)); // the experience ore gives (he keeps it, see xp.js)
+  invalidateCell(dim.id, a.pos); // (the pathfinder's memory of it is out of date)
   brain.action = null;
   return "done";
 }
@@ -197,6 +199,7 @@ export function placeBlock(villager, dim, pos, typeId, sound = "use.wood") {
   } catch {
     return false;
   }
+  invalidateCell(dim.id, pos);
   playSound(dim, sound, center(pos));
   return true;
 }

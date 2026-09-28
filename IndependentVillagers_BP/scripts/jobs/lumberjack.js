@@ -185,7 +185,9 @@ function seek(villager, dim, brain, now, ws) {
   }
 
   // Scan the forest around the workstation a slice at a time
-  if (!brain.scan || (brain.scan.done && now - brain.scan.doneAt > CFG.RESCAN_EVERY)) brain.scan = newScan(ws);
+  // (a fresh look round every so often - and when the last one found nothing, a good while later)
+  const rescanAfter = brain.scan?.empty ? CFG.RESCAN_EMPTY : CFG.RESCAN_EVERY;
+  if (!brain.scan || (brain.scan.done && now - brain.scan.doneAt > rescanAfter)) brain.scan = newScan(ws);
   if (!brain.scan.done) {
     stepScan(dim, brain.scan, CFG.SCAN_COLUMNS_PER_THINK);
     if (!brain.scan.done) return sleep(brain, 2);
@@ -231,7 +233,7 @@ function seek(villager, dim, brain, now, ws) {
   // Nothing to chop right now
   if (brain.scan.done) {
     debugLog(villager, "no choppable trees nearby - taking a break");
-    brain.scan = null; // rescan after the break
+    brain.scan.empty = true; // (he'll look again in a while, not straight after his break)
     return setState(villager, brain, "idle", CFG.IDLE_TIME);
   }
 }

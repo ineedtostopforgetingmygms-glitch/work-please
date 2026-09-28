@@ -62,26 +62,39 @@ function cooledDown(villager) {
 const willing = (v, brain) =>
   !brain.flee && !brain.tattle && !brain.court && !brain.asleep && LOOSE.has(brain.state) && foodPoints(v) >= FAMILY.FOOD && cooledDown(v);
 
-const BED_LOOK = ringOffsets(0, FAMILY.RADIUS, [0, 1, -1, 2, -2, 3, -3]);
-const bedCache = new Map(); // "x,z" chunk-ish key -> {at, beds}
+const BED_LOOK = ringOffsets(0, FAMILY.BED_RADIUS, [0, 1, -1, 2, -2, 3, -3]);
+const bedCache = new Map(); // "dim|cell" -> {at, i, heads, done}
 
-/** Beds around here (a slow look, so remembered for a minute). */
+/**
+ * Beds around here. Counting them is a big look round, so it's done a slice at a time (whoever
+ * asks next carries it on) and the answer is kept for a few minutes. Undefined until it's known.
+ */
 function bedsNear(dim, pos) {
-  const key = `${dim.id}|${Math.floor(pos.x / 16)},${Math.floor(pos.z / 16)}`;
-  const c = bedCache.get(key);
-  if (c && system.currentTick - c.at < 1200) return c.beds;
-  let heads = 0;
-  for (const o of BED_LOOK) {
-    const b = getBlock(dim, { x: pos.x + o.x, y: pos.y + o.y, z: pos.z + o.z });
+  const key = `${dim.id}|${Math.floor(pos.x / 32)},${Math.floor(pos.z / 32)}`;
+  const now = system.currentTick;
+  let c = bedCache.get(key);
+  if (c?.done && now - c.at < FAMILY.BED_RECOUNT) return c.heads;
+  if (!c || c.done) {
+    c = { i: 0, heads: 0, done: false, at: now, o: { x: Math.floor(pos.x / 32) * 32 + 16, y: pos.y, z: Math.floor(pos.z / 32) * 32 + 16 } };
+    if (bedCache.size > 64) bedCache.clear();
+    bedCache.set(key, c);
+  }
+  const end = Math.min(BED_LOOK.length, c.i + 4000);
+  for (; c.i < end; c.i++) {
+    const o = BED_LOOK[c.i];
+    const b = getBlock(dim, { x: c.o.x + o.x, y: c.o.y + o.y, z: c.o.z + o.z });
     if (!b || !/bed$/.test(b.typeId)) continue;
     try {
       if (b.permutation.getState("head_piece_bit") !== true) continue; // count each bed once
     } catch {}
-    heads++;
+    c.heads++;
   }
-  if (bedCache.size > 64) bedCache.clear();
-  bedCache.set(key, { at: system.currentTick, beds: heads });
-  return heads;
+  if (c.i >= BED_LOOK.length) {
+    c.done = true;
+    c.at = now;
+    return c.heads;
+  }
+  return undefined;
 }
 
 /** Room for a baby: fewer villagers (babies included) about than there are beds, and not too many. */
@@ -92,7 +105,8 @@ function roomForBaby(dim, pos) {
       dim.getEntities({ type: VILLAGER_ID, location: pos, maxDistance: FAMILY.RADIUS }).length +
       dim.getEntities({ type: "minecraft:villager_v2", location: pos, maxDistance: FAMILY.RADIUS }).length;
   } catch {}
-  return people < FAMILY.MAX && people < bedsNear(dim, floorPos(pos));
+  const beds = bedsNear(dim, floorPos(pos));
+  return beds !== undefined && people < FAMILY.MAX && people < beds;
 }
 
 /**

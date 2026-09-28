@@ -89,7 +89,7 @@ export const CFG = {
 
   // Job hunting
   JOB_SCAN_RADIUS: 10,
-  JOB_SCAN_EVERY: 40,
+  JOB_SCAN_EVERY: 100,
   // Nobody's hiring: after this long with no free job block in sight, a villager gets himself some
   // wood and puts up his own Woodcutter's Bench rather than loafing about for ever.
   SELF_EMPLOY: true,
@@ -104,7 +104,7 @@ export const CFG = {
 
   // Getting his own wood: no lumberjack will sell him any, so he goes and punches a tree himself
   // (that's how a player starts too) instead of standing about waiting for a delivery.
-  WOOD: { RADIUS: 40, SCAN_PER_THINK: 900, RETRY: 20 * 60, TIMEOUT: 20 * 120, PATIENCE: 20 * 60 },
+  WOOD: { RADIUS: 40, SCAN_PER_THINK: 300, RETRY: 20 * 60, TIMEOUT: 20 * 120, PATIENCE: 20 * 60 },
 
   // Player-like limits
   REACH: 4.5, // how far a villager can reach to place blocks / use chests (from its eyes)
@@ -115,11 +115,14 @@ export const CFG = {
 
   // Navigation
   NAV_SLOTS: 8, // must match tools/gen-entity.ps1 and the iv:nav_N blocks
-  NAV_STEP: 6, // route nodes per hop
-  PATH_BUDGET: 350, // A* expansions per navigation update (keeps each tick cheap)
+  NAV_STEP: 5, // route nodes per hop (the marker stays within the walking goal's search range)
+  PATH_BUDGET: 250, // A* expansions per navigation update...
+  PATH_TICK_BUDGET: 1200, // ...and for every villager together in one tick (the rest wait a tick)
+  WALK_SPEED: 0.12, // blocks a tick when he walks himself (see nav.js)...
+  RUN_SPEED: 0.26, // ...and when he's running from something
   NAV_SHORT_NODES: 5, // routes this short are walked by hand (see nav.js) - faster and surer
-  NAV_STUCK_TICKS: 50, // no progress for this long counts as stuck
-  NAV_STILL_TICKS: 100, // ...and so does hardly moving at all (jittering against a tree or a wall)
+  NAV_STUCK_TICKS: 36, // no progress for this long counts as stuck
+  NAV_STILL_TICKS: 50, // ...and so does hardly moving at all (jittering against a tree or a wall)
   NAV_MAX_STUCK: 3,
 
   // Lumberjack
@@ -128,6 +131,7 @@ export const CFG = {
   FOREST_ENOUGH: 8,
   SCAN_COLUMNS_PER_THINK: 300,
   RESCAN_EVERY: 20 * 60,
+  RESCAN_EMPTY: 20 * 60 * 3, // the last look round found nothing to chop: look again after this
   TREE_RADIUS: 7, // max horizontal spread of a single tree from its trunk
   MAX_TREE_LOGS: 600, // giant jungle trees (2x2 trunks, 30+ tall, big branches) can top 300
   MIN_TREE_LOGS: 3,
@@ -212,7 +216,7 @@ export const XP = { PER_BOTTLE: 7, MAX_AT_ONCE: 4, BOTTLE_EVERY: 20 * 30 };
 export const THREAT = {
   RADIUS: 10,
   CLOSE: 3, // this close he doesn't need to see it (it's hitting him)
-  CHECK_EVERY: 10,
+  CHECK_EVERY: 16,
   SAFE_AFTER: 20 * 4,
   RUN: 12, // how far he runs before looking round again
   GOLEM_RADIUS: 32,
@@ -233,6 +237,8 @@ export const FARM = {
   SEEDS_WANTED: 8,
   GRASS_SEARCH: 20, // he beats seeds out of tall grass this far away
   TEND_TIME: 20 * 60,
+  RESCAN: 20 * 60, // a full look for farmland round his composter this often (a slice a think)
+  SCAN_PER_THINK: 500,
   WHEAT_KEEP: 16, // wheat he doesn't bake (the butcher buys it for his cows and sheep)...
   BREAD_MAX: 16, // ...and the most loaves he bakes at a time
 };
@@ -251,7 +257,9 @@ export const VILLAGE = {
 export const FAMILY = {
   FOOD: 12, // bread / cooked meat 4, baked potato 2, carrot / potato / beetroot 1
   EVERY: 20 * 60 * 20, // no more than one baby a villager this often
-  RADIUS: 48, // "the village": beds and villagers counted this far round
+  RADIUS: 48, // "the village": villagers counted this far round...
+  BED_RADIUS: 40, // ...and beds this far round the middle of the 32x32 patch he's in
+  BED_RECOUNT: 20 * 60 * 5, // beds are counted again this often
   MAX: 30, // no babies once there are this many villagers about
   PARTNER_RADIUS: 16,
   CHECK_EVERY: 20 * 20,

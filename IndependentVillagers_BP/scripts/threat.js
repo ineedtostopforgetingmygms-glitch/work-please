@@ -94,7 +94,8 @@ export function dangerCheck(villager, dim, brain, now, onWake) {
   const f = brain.flee;
   if (!f) {
     if (now < (brain.nextDanger ?? 0)) return false;
-    brain.nextDanger = now + THREAT.CHECK_EVERY;
+    // (everyone checks on his own tick, not all twenty in the same one)
+    brain.nextDanger = now + THREAT.CHECK_EVERY + (brain.nextDanger === undefined ? Math.floor(Math.random() * THREAT.CHECK_EVERY) : 0);
     const threats = threatsNear(dim, villager);
     if (!threats.length) return false;
     startFleeing(villager, dim, brain, now, threats, onWake);
@@ -169,7 +170,7 @@ function stopFleeing(villager, brain) {
 
 function speedUp(villager) {
   try {
-    villager.addEffect("speed", 60, { amplifier: 1, showParticles: false });
+    villager.addEffect("speed", 60, { amplifier: 2, showParticles: false }); // (he walks otherwise)
   } catch {}
 }
 
