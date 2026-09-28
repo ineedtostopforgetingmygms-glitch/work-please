@@ -759,7 +759,17 @@ function stash(villager, dim, brain, now, ws) {
   if (r === "moving") return sleep(brain, 4);
   setMode(villager, brain, "work");
 
-  if (!brain.job?.visit) brain.job = { visit: { tried: new Set(), placed: 0 } };
+  if (!brain.job?.visit) {
+    brain.job = { visit: { tried: new Set(), placed: 0 } };
+    // wheat into bread (3 a loaf) - it's what the village buys to eat. Some wheat stays wheat, for
+    // the butcher's animals.
+    const loaves = Math.min(FARM.BREAD_MAX, Math.floor((vCount(inv, (id) => id === "minecraft:wheat") - FARM.WHEAT_KEEP) / 3));
+    if (loaves > 0 && vTake(inv, (id) => id === "minecraft:wheat", loaves * 3).length === loaves * 3) {
+      vAdd(inv, new ItemStack("minecraft:bread", loaves));
+      playSound(dim, "random.eat", villager.location, 1.4);
+      debugLog(villager, `baked ${loaves} loaves of bread`);
+    }
+  }
   const visit = brain.job.visit;
   const chests = stockpileChests(dim, ws, "crops");
 

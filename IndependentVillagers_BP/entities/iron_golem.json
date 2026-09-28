@@ -502,6 +502,24 @@
                   {
                     "test": "is_family",
                     "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_tag",
+                    "subject": "other",
+                    "value": "iv_wanted"
+                  }
+                ]
+              },
+              "max_dist": 64,
+              "priority": 0
+            },
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
                     "value": "monster"
                   },
                   {
@@ -513,7 +531,7 @@
                 ]
               },
               "max_dist": 64,
-              "priority": 0
+              "priority": 1
             }
           ]
         }

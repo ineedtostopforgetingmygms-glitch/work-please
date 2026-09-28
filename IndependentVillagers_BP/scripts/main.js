@@ -30,9 +30,12 @@ import { startTradeSession, updateTradeTable } from "./trade.js";
 import { clock, marketHours } from "./jobs/market.js";
 import { bellRung, wakeIfNeeded, wakeUp } from "./jobs/rest.js";
 import { dangerCheck } from "./threat.js";
+import { tattleCheck } from "./golem.js";
+import { familyCheck } from "./family.js";
 import { fieldClaims, releaseFields } from "./jobs/fields.js";
 import { zombify } from "./zombie.js";
 import { updateTag } from "./names.js";
+import { forceVillage, noteVillage } from "./village.js";
 import { bottleXp, xpOf } from "./xp.js";
 
 // profession -> brain function. New jobs plug in here.
@@ -79,6 +82,8 @@ system.runInterval(() => {
       // a zombie about to get him beats everything else - even a deal or his bed
       try {
         if (dangerCheck(villager, dim, brain, now, () => wakeUp(villager, dim, brain))) continue;
+        if (tattleCheck(villager, dim, brain, now)) continue; // a player hit him hard: off to the golem
+        if (familyCheck(villager, dim, brain, now)) continue; // plenty of food and someone special
       } catch (e) {
         console.warn(`[Independent Villagers] danger check: ${e}`);
       }
@@ -109,6 +114,7 @@ system.runInterval(() => {
           cleanupStaleMarker(villager);
           initVillager(villager); // starting emeralds (once per villager)
           updateTag(villager); // his name, and his job underneath
+          noteVillage(dim, villager.location); // (villages from before v1.12 get their Workshop too)
         }
         if (now >= (brain.nextTradeCheck ?? 0)) {
           brain.nextTradeCheck = now + 100;
@@ -243,6 +249,11 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
     }
     dim.getBlock(table).setType(job);
     say(`[IV] spawnjack: table at ${table.x} ${table.y} ${table.z} (ground ${b.typeId})`);
+  } else if (ev.id === "iv:village") {
+    // /scriptevent iv:village <x> <y> <z>  - do up the village round there now (Workshop + furnished houses)
+    const [x, y, z] = args.map(Number);
+    forceVillage(world.getDimension("minecraft:overworld"), { x, y, z });
+    say(`[IV] village: looking for a bell round ${x} ${y} ${z}`);
   } else if (ev.id === "iv:goto") {
     // /scriptevent iv:goto <x> <y> <z>  - the nearest villager walks there (pauses its job)
     const [x, y, z] = args.map(Number);

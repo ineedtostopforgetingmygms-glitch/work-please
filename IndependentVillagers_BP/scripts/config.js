@@ -163,6 +163,7 @@ export const CFG = {
   MARKET: { EARLIEST: 1000, LATEST: 8000, LENGTH: 3000, MIN_LOTS: 2, EXTRA_LENGTH: 20 * 90, EXTRA_REST: 20 * 120 },
 
   ZOMBIFY: true, // killed by a zombie -> he gets up again as a zombie villager
+  VILLAGE_SETUP: true, // a new village (one with a bell) gets a Workshop and furnished houses (village.js)
 
   // Home life
   NIGHT: { START: 12600, END: 23200 }, // ticks of the day he'd rather be in bed than at work
@@ -189,6 +190,8 @@ export const GOLEM = {
   IRON: 36, // the armorer builds one from 4 iron blocks (36 ingots) and a carved pumpkin...
   EVERY: 20 * 60 * 20, // ...no more often than this
 };
+// hit a villager for more than SHARE of his health (within WINDOW) and he tells the iron golem
+export const TATTLE = { SHARE: 0.5, WINDOW: 20 * 30, GOLEM_RADIUS: 64, HUNT_TIME: 20 * 60, TIMEOUT: 20 * 40 };
 export const NITWIT = {
   SIGHT: 24, // how far off he spots a monster
   LOOK_EVERY: 20,
@@ -213,6 +216,7 @@ export const THREAT = {
   SAFE_AFTER: 20 * 4,
   RUN: 12, // how far he runs before looking round again
   GOLEM_RADIUS: 32,
+  HOME_RADIUS: 40, // he runs home to his house (his bed) if it's this close and not past the monster
 };
 
 // ---------------------------------------------------------------- farming
@@ -229,6 +233,32 @@ export const FARM = {
   SEEDS_WANTED: 8,
   GRASS_SEARCH: 20, // he beats seeds out of tall grass this far away
   TEND_TIME: 20 * 60,
+  WHEAT_KEEP: 16, // wheat he doesn't bake (the butcher buys it for his cows and sheep)...
+  BREAD_MAX: 16, // ...and the most loaves he bakes at a time
+};
+
+// ---------------------------------------------------------------- village setup
+export const VILLAGE = {
+  RADIUS: 64, // one village per this much ground (a bell this close is the same village)
+  BELL_SEARCH: 48, // how far from a villager to look for his village's bell
+  HALL_MIN: 8, // the Workshop goes between these distances from the bell
+  HALL_MAX: 36,
+  ROOM_MIN: 6, // a house needs this many free floor blocks to get a crafting table and chest
+};
+
+// ---------------------------------------------------------------- families
+// Two villagers with FOOD points of food each and a free bed about have a baby (see family.js).
+export const FAMILY = {
+  FOOD: 12, // bread / cooked meat 4, baked potato 2, carrot / potato / beetroot 1
+  EVERY: 20 * 60 * 20, // no more than one baby a villager this often
+  RADIUS: 48, // "the village": beds and villagers counted this far round
+  MAX: 30, // no babies once there are this many villagers about
+  PARTNER_RADIUS: 16,
+  CHECK_EVERY: 20 * 20,
+  HEARTS: 60,
+  TIMEOUT: 20 * 60,
+  RICH: 24, // a villager with this many emeralds keeps food in...
+  BUY: 3, // ...buying this much at a time
 };
 
 // ---------------------------------------------------------------- cartographer
@@ -495,6 +525,7 @@ export const MINE = {
   COAL_WANT: 16, // coal (torches count a quarter each) in his pockets and chest
   IRON_RICH: 48, // raw iron + ingots before he thinks about diamonds...
   DIAMOND_CHANCE: 0.2, // ...and then only this often
+  RETRY_START: 20 * 60 * 10, // no way down from his stonecutter: he tries again after this long
   STASH_FREE: 4, // pockets full: cheap stacks go in the chest until this many slots are free
   BORROW_LOGS: 4, // 2 for a wooden pickaxe (+ sticks), 2 for a chest
   REPAY: { item: "minecraft:cobblestone", count: 3 },

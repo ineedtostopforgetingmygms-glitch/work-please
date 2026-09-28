@@ -41,6 +41,8 @@ export const STATE_LABELS = {
   tax: "Collecting taxes",
   char: "Burning charcoal",
   flee: "Running from a monster!",
+  tattle: "Running to tell the iron golem who hurt him!",
+  court: "Spending time with someone special",
   watch: "Keeping an eye out for monsters",
   report: "Running to tell the iron golem!",
   golem: "Building an iron golem",

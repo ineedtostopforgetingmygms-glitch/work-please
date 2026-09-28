@@ -23,6 +23,30 @@ const DP_MINE_ID = "iv:mineid";
 const OWNER_TIMEOUT = 20 * 60 * 3; // a tunnel whose miner hasn't touched it for this long is up for grabs
 
 let mines;
+const CHUNK = 30000; // a dynamic property holds at most 32767 characters: a big mine is kept in parts
+
+function readMine(id) {
+  const head = world.getDynamicProperty(`iv:mine_${id}`);
+  if (typeof head !== "string") return undefined;
+  let json = head;
+  if (head.startsWith("#parts:")) {
+    json = "";
+    const n = Number(head.slice(7));
+    for (let i = 0; i < n; i++) json += world.getDynamicProperty(`iv:mine_${id}_${i}`) ?? "";
+  }
+  return JSON.parse(json);
+}
+
+function writeMine(m) {
+  const json = JSON.stringify(m);
+  if (json.length <= CHUNK) {
+    world.setDynamicProperty(`iv:mine_${m.id}`, json);
+    return;
+  }
+  const n = Math.ceil(json.length / CHUNK);
+  for (let i = 0; i < n; i++) world.setDynamicProperty(`iv:mine_${m.id}_${i}`, json.slice(i * CHUNK, (i + 1) * CHUNK));
+  world.setDynamicProperty(`iv:mine_${m.id}`, `#parts:${n}`);
+}
 
 function all() {
   if (mines) return mines;
@@ -31,15 +55,21 @@ function all() {
   try {
     ids = JSON.parse(world.getDynamicProperty(WORLD_DP_MINES) ?? "[]");
   } catch {}
+  let migrated = false;
   for (const entry of ids) {
-    // (mines from before v1.10 were stored whole in this list - they're finished with: the miners
-    // start a proper deep mine instead)
-    if (typeof entry !== "string") continue;
     try {
-      const m = JSON.parse(world.getDynamicProperty(`iv:mine_${entry}`) ?? "null");
-      if (m?.v === 2) mines.push(m);
+      if (typeof entry === "string") {
+        const m = readMine(entry);
+        if (m?.v === 2) mines.push(m);
+      } else if (entry?.segs) {
+        // a mine from before v1.10 (kept whole in this list): carried on as a proper deep mine
+        // rather than left behind while the miners dig a new one next to it
+        mines.push(migrateOld(entry));
+        migrated = true;
+      }
     } catch {}
   }
+  if (migrated) saveMines();
   return mines;
 }
 
@@ -47,8 +77,48 @@ function all() {
 export function saveMines(mine) {
   try {
     world.setDynamicProperty(WORLD_DP_MINES, JSON.stringify(all().map((m) => m.id)));
-    for (const m of mine ? [mine] : all()) world.setDynamicProperty(`iv:mine_${m.id}`, JSON.stringify(m));
+    for (const m of mine ? [mine] : all()) writeMine(m);
   } catch {}
+}
+
+/**
+ * An old mine (a 3x4 staircase 12 deep, then level 3x4 tunnels) in the new layout: the staircase
+ * becomes the first leg down to the coal level, the tunnels become that level's corridors, and the
+ * stairs carry on down to the iron level from where the old ones stopped.
+ */
+function migrateOld(old) {
+  const ws = { x: old.x, y: old.y, z: old.z };
+  const levels = levelsFor(old.d, ws);
+  const segs = [];
+  const dug = (s) => (s.done ? s.len : s.i ?? 0);
+  const at = (x, y, z) => {
+    for (let n = 0; n < segs.length; n++) {
+      const s = segs[n];
+      for (let i = 0; i < s.len; i++) {
+        const c = sliceCenter(s, i);
+        if (c.x === x && c.z === z && Math.abs(c.y - y) <= 1) return { n, i };
+      }
+    }
+    return undefined;
+  };
+  for (const s of old.segs ?? []) {
+    const d = dug(s);
+    if (s.descend) {
+      const stairLen = Math.max(1, Math.min(s.done ? s.len : 13, 13));
+      segs.push({ k: "stair", p: -1, at: 0, ox: s.ox, oy: s.oy, oz: s.oz, dx: s.dx, dz: s.dz, len: stairLen, drop: 1, w: 3, h: 4, i: Math.min(d, stairLen), seen: 0, done: d >= stairLen });
+      const coal = levels.find((l) => l.n === "coal");
+      if (coal) coal.y = s.oy - (stairLen - 1);
+      if (s.len > 13) {
+        segs.push({ k: "main", p: segs.length - 1, at: 12, lvl: "coal", ox: s.ox + s.dx * 13, oy: s.oy - 12, oz: s.oz + s.dz * 13, dx: s.dx, dz: s.dz, len: s.len - 13, drop: 0, w: 3, h: 4, i: Math.max(0, d - 13), seen: 0, done: !!s.done || d >= s.len });
+      }
+    } else {
+      const par = at(s.ox - s.dx * 2, s.oy, s.oz - s.dz * 2) ?? { n: 0, i: Math.max(0, (segs[0]?.len ?? 1) - 1) };
+      segs.push({ k: "main", p: par.n, at: par.i, lvl: "coal", ox: s.ox, oy: s.oy, oz: s.oz, dx: s.dx, dz: s.dz, len: s.len, drop: 0, w: 3, h: 4, i: d, seen: 0, done: !!s.done || d >= s.len });
+    }
+  }
+  const mine = { id: old.id ?? `m${Date.now().toString(36)}`, v: 2, d: old.d, x: ws.x, y: ws.y, z: ws.z, levels, segs, bad: old.bad ?? [], done: false };
+  if (segs[0]?.done) afterStairLeg(mine, 0);
+  return mine;
 }
 
 // ---------------------------------------------------------------- geometry

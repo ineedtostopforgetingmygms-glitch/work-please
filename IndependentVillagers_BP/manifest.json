@@ -4,26 +4,26 @@
     "name": "Independent Villagers (Behavior)",
     "description": "Villagers with real inventories that live and work on their own.",
     "uuid": "7c1e4a52-3f8b-4d2a-9c61-0b5e8f2d1a93",
-    "version": [1, 11, 0],
+    "version": [1, 12, 0],
     "min_engine_version": [1, 21, 90]
   },
   "modules": [
     {
       "type": "data",
       "uuid": "2a9d6f14-8e3c-4b7a-a5d2-6c1f0e9b3d47",
-      "version": [1, 11, 0]
+      "version": [1, 12, 0]
     },
     {
       "type": "script",
       "language": "javascript",
       "uuid": "e5b8c3a1-9d4f-4e62-8b17-3a0c6d2f5e81",
-      "version": [1, 11, 0],
+      "version": [1, 12, 0],
       "entry": "scripts/main.js"
     }
   ],
   "dependencies": [
     { "module_name": "@minecraft/server", "version": "2.0.0" },
-    { "uuid": "4f3a2b1c-6d5e-4a9b-8c7d-1e2f3a4b5c6d", "version": [1, 11, 0] }
+    { "uuid": "4f3a2b1c-6d5e-4a9b-8c7d-1e2f3a4b5c6d", "version": [1, 12, 0] }
   ]
 }
 

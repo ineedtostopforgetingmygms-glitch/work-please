@@ -10,6 +10,16 @@ import { debugLog } from "./debug.js";
 import { navStop, navTo, navUpdate } from "./nav.js";
 import { dist, eyePos, findStandableNear, floorPos, getBlock, isValid, raycast } from "./util.js";
 
+/** His bed (where he sleeps - his house), if he has one in this dimension. */
+function bedOf(villager, dim) {
+  try {
+    const b = JSON.parse(villager.getDynamicProperty("iv:bed") ?? "null");
+    return b && b.d === dim.id ? { x: b.x, y: b.y, z: b.z } : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // monsters that leave villagers alone
 const HARMLESS = new Set([
   "minecraft:enderman",
@@ -111,7 +121,11 @@ export function dangerCheck(villager, dim, brain, now, onWake) {
     const r = navUpdate(villager, brain, now);
     if (r !== "moving") navStop(villager, brain);
   } else if (now - (f.lastRun ?? 0) > 20) {
-    runFrom(villager, dim, brain, f.threats);
+    // home and indoors: he stays put unless it's come in after him
+    const home = f.homeSpot && dist(villager.location, { x: f.homeSpot.x + 0.5, y: f.homeSpot.y, z: f.homeSpot.z + 0.5 }) < 3;
+    const close = f.threats.some((t) => dist(t, villager.location) <= THREAT.CLOSE + 1);
+    if (!home || close) runFrom(villager, dim, brain, f.threats);
+    else setMode(villager, brain, "rest");
   }
   return true;
 }
@@ -160,9 +174,9 @@ function speedUp(villager) {
 }
 
 /**
- * Picks somewhere to run to: an iron golem if there's one about and the monsters aren't between
- * them, otherwise a dry spot a dozen blocks directly away from them (or as near that as the
- * ground allows).
+ * Picks somewhere to run to: his own house (his bed) if the monsters aren't between him and it,
+ * then an iron golem the same way, otherwise a dry spot a dozen blocks directly away from them (or
+ * as near that as the ground allows).
  */
 function runFrom(villager, dim, brain, threats) {
   const f = brain.flee;
@@ -188,6 +202,23 @@ function runFrom(villager, dim, brain, threats) {
   }
   const nearest = (p) => Math.min(...threats.map((t) => dist(t, p)));
   const here = nearest(l);
+  const awayish = (p) => {
+    const gx = p.x - l.x;
+    const gz = p.z - l.z;
+    const gl = Math.hypot(gx, gz) || 1;
+    return (gx * ax + gz * az) / gl > -0.3;
+  };
+
+  // home: into his house, by his bed (the monster isn't in there with him)
+  const bed = bedOf(villager, dim);
+  if (bed && dist(bed, l) <= THREAT.HOME_RADIUS && (awayish(bed) || dist(bed, l) < 4) && nearest(bed) > THREAT.CLOSE + 1) {
+    const spot = findStandableNear(dim, bed, 2, 2, (q) => /bed$/.test(getBlock(dim, q)?.typeId ?? "") || /bed$/.test(getBlock(dim, { x: q.x, y: q.y - 1, z: q.z })?.typeId ?? ""));
+    if (spot && navTo(villager, brain, spot, { radius: 1.2, partial: true })) {
+      if (f && !f.homeSpot) debugLog(villager, "running home");
+      if (f) f.homeSpot = spot;
+      return;
+    }
+  }
 
   // an iron golem he can run to (not one on the far side of the zombies)
   try {
@@ -196,7 +227,7 @@ function runFrom(villager, dim, brain, threats) {
       const gx = golem.location.x - l.x;
       const gz = golem.location.z - l.z;
       const gl = Math.hypot(gx, gz) || 1;
-      if ((gx * ax + gz * az) / gl > -0.3) {
+      if ((gx * ax + gz * az) / gl > -0.3 && gl > 3) {
         const spot = findStandableNear(dim, floorPos(golem.location), 2, 3);
         if (spot && navTo(villager, brain, spot, { radius: 1.5, partial: true })) return;
       }

@@ -2,6 +2,7 @@
 // Babies are left alone until they grow up (the periodic sweep picks them up then).
 import { PROP_BIOME, PROP_PROFESSION, Profession, VANILLA_VILLAGERS, VILLAGER_ID } from "./config.js";
 import { restoreCured } from "./zombie.js";
+import { noteVillage } from "./village.js";
 
 const NITWIT_VARIANT = 14;
 import { getInventory, isValid } from "./util.js";
@@ -40,6 +41,7 @@ export function replaceVanillaVillager(old) {
     if (leftover) dim.spawnItem(leftover, location);
   }
   restoreCured(villager); // a cured zombie villager gets his things back
+  noteVillage(dim, location); // a village we haven't seen before gets done up (village.js)
   if (variant === NITWIT_VARIANT) villager.setProperty(PROP_PROFESSION, Profession.NITWIT);
 }
 

@@ -55,6 +55,8 @@ export const GOODS = {
   sugar_cane: { label: "sugar cane", match: (id) => id === "minecraft:sugar_cane", keep: 8 },
   seeds: { label: "seeds", match: (id) => id === "minecraft:wheat_seeds" || id === "minecraft:beetroot_seeds", keep: 8 },
   pumpkin: { label: "pumpkin", match: (id) => id === "minecraft:pumpkin", keep: 0 },
+  // something to eat: bread off the farmer, cooked meat off the butcher (villagers who've plenty have babies)
+  food: { label: "food", match: (id) => id === "minecraft:bread" || id === "minecraft:baked_potato" || /^minecraft:cooked_(beef|porkchop|chicken|mutton)$/.test(id), keep: 0 },
   // animal feed for the butcher (the farmer keeps a few carrots and potatoes back to plant)
   wheat: { label: "wheat", match: (id) => id === "minecraft:wheat", keep: 0 },
   carrot: { label: "carrots", match: (id) => id === "minecraft:carrot", keep: 8 },

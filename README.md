@@ -106,6 +106,46 @@ within 64 blocks for 45 seconds, even ones it can't see.
 only when they can afford it and still have plenty left: 64 spare emeralds for iron, 128 for
 diamond.
 
+## Village life (v1.12)
+
+Every villager runs on the same simple routine:
+
+- **Daytime:** does his job. A jobless villager looks for a free job block.
+- **Night:** goes to bed.
+- **Monsters about:** runs home to his house (his bed) if the way there isn't past the monster.
+  Otherwise he runs to an iron golem, or just away. He goes back to what he was doing once it's
+  gone.
+- **Babies:** two villagers who both have plenty of food (12 points: bread and cooked meat 4
+  each, a baked potato 2, carrots, potatoes and beetroot 1) have a baby in the daytime, when
+  they're at a loose end. The village needs a free bed for it (more beds than villagers, and
+  fewer than 30 villagers). They meet, hearts all round, and each gives up 12 points of food. The
+  baby is a vanilla baby that grows up in 20 minutes and becomes one of ours, with a name. A
+  villager can do this once every 20 minutes.
+- **Food:** villagers with 24+ emeralds buy food when they're short: bread from the farmer, who
+  now bakes his spare wheat, and cooked meat from the butcher.
+
+**Hurting villagers:** hit a villager for more than half his health (within 30 seconds) and he
+runs to the nearest iron golem and tells on you. For the next minute, that golem comes after you
+from up to 64 blocks away, seen or not.
+
+## Village setup (v1.12)
+
+Bedrock's village houses are built into the game, and an add-on can't change the pieces villages
+are built from. So instead, the first time we see a village (its vanilla villagers turning into
+ours, or one of ours loading near its bell), it gets done up:
+
+- **A Workshop** goes up near the bell (8 to 36 blocks away, on flat ground clear of the village):
+  a villager-style building of cobblestone, oak planks and oak logs, with windows, a door facing
+  the bell, lanterns and a path. Inside there's one of every job block along the back wall
+  (Woodcutter's Bench, Stonecutter, Composter, Cartography Table, Blast Furnace, Smoker), plus
+  crafting tables, chests and a barrel. Every trade in the add-on has somewhere to start.
+- **Houses with room to spare** get a crafting table and a chest against a wall. They never go in
+  the doorway or next to a bed, and a house that already has one is left alone.
+
+Each village is only done once (remembered by its bell). A village without a bell is left alone.
+`/scriptevent iv:village <x> <y> <z>` does up the village round a spot on demand, and
+`VILLAGE_SETUP: false` in `config.js` turns it off.
+
 ## Names (v1.11)
 
 Every villager has a name, shown over his head with his job on the line underneath:
@@ -160,7 +200,9 @@ zombie keeps his name as a zombie villager, and has it again when he's cured.
   (`GOODS.xp_bottle`).
 - The farmer still doesn't buy seeds from wandering traders. `scripts/jobs/wanderer.js` can do
   it, but it isn't hooked up for the farmer yet.
-- Mines dug before v1.10 are left as they are: miners start a new, deeper mine.
+- Mines dug before v1.10 are carried on (v1.12): the old staircase becomes the way down to the
+  coal level and the stairs continue from there. Miners no longer start a second shaft next to a
+  mine that's already there.
 
 ## Tuning
 
@@ -173,6 +215,9 @@ Everything is in `IndependentVillagers_BP/scripts/config.js`:
 | `GOLEM` / `NITWIT` | Golems per villager, alert time, how far nitwits look and run |
 | `THREAT` | How close a monster has to be before villagers run |
 | `XP` | Experience per bottle |
+| `FAMILY` | Food needed for a baby, how often, village size limit |
+| `TATTLE` | How hard a player has to hit a villager before he tells a golem |
+| `VILLAGE` | Where the Workshop goes, how much room a house needs to be furnished |
 | `CARTO` | Cartographer search radii, stock, compass and tax timers, tax bands |
 | `ARMOR` | Ore to buy, tool stock, coal the miner keeps back |
 | `TOOLS` | How rich a villager must be before he buys a tool |
@@ -196,6 +241,8 @@ python3 tools/build_mcaddon.py   # -> dist/IndependentVillagers_v<version>.mcadd
 - `/scriptevent iv:status`: every villager's job, task, experience and inventory
 - `/scriptevent iv:spawnjack <x> <z> cartographer|armorer|miner|farmer|butcher|nitwit`: job block
   plus a villager (a nitwit gets no job block)
+- `/scriptevent iv:village <x> <y> <z>`: build the Workshop and furnish the houses of the village
+  round there now
 
 ## Working on the add-on
 
@@ -206,4 +253,5 @@ logic loops before you test in game. It doesn't show real block names, terrain o
 node tools/sim/run.mjs shore|well|wild2|tools   # cartographer + armorer
 node tools/sim/mine.mjs 60000 3                   # three miners sharing one mine
 node tools/sim/village.mjs 30000                  # butcher, nitwit + golem, zombies, armorer's golem
+node tools/sim/village2.mjs 15000                 # Workshop + houses, babies, telling on a player, running home
 ```

@@ -15,6 +15,15 @@ setDebug(true);
 const dim = world.getDimension("minecraft:overworld");
 const set = (x, y, z, id) => dim._set(x, y, z, id);
 const never = { start: 23990, len: 1 };
+if (process.env.OLDMINE) {
+  // a mine from before v1.10: a 3x4 staircase down 12 from -4 64 0 heading +x, 20 slices dug
+  const segs = [{ ox: -4, oy: 64, oz: 0, dx: 1, dz: 0, len: 32, descend: true, i: 20, seen: 0, done: false }];
+  world.setDynamicProperty("iv:mines", JSON.stringify([{ id: "mold", d: "minecraft:overworld", x: -6, y: 64, z: 0, segs, bad: [], done: false }]));
+  for (let i = 0; i < 20; i++) {
+    const fy = 64 - Math.min(i, 12);
+    for (let w = -1; w <= 1; w++) for (let h = 0; h < 4; h++) set(-4 + i, fy + h, w, "minecraft:air");
+  }
+}
 const miners = [];
 for (let n = 0; n < N; n++) {
   set(-6 + n * 8, 64, 0, "minecraft:stonecutter_block");

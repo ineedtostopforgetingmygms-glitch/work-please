@@ -12,7 +12,7 @@
 //   stash    walks home, stores what he mined in his chest (crafting a chest first if he has none),
 //            restocks his shop row, upgrades to a stone pickaxe when he can
 //   market   his trading hours: stands at his stonecutter and sells (market.js)
-import { BlockPermutation, ItemStack } from "@minecraft/server";
+import { BlockPermutation, ItemStack, world } from "@minecraft/server";
 import { BUILD_BLOCK, BUILD_BLOCK_EXCEPTIONS, CFG, LOGS, MINE, MINER_PICKUPS, MINE_AVOID, ORE, oreLevel, PICKAXE_BLOCK, PICKAXES, pickLevel, Profession, UNBREAKABLE } from "../config.js";
 import { setMode, setState, setWorking, sleep } from "../brain.js";
 import { debugLog } from "../debug.js";
@@ -564,6 +564,7 @@ function workplace(villager, dim, ws, now, brain) {
     debugLog(villager, `planned a new mine heading ${leg.dx},${leg.dz} from ${fmt({ x: leg.ox, y: leg.oy, z: leg.oz })}: levels ${mine.levels.map((l) => `${l.n} at y=${l.y}`).join(", ")}`);
   }
   if (mine.done) return { mine };
+  if ((mine.pausedUntil ?? 0) > world.getAbsoluteTime()) return { mine, wait: true };
   const want = brain.mineLevel ?? "iron";
   const w = chooseWork(mine, villager.id, now, want);
   if (w.done) {
@@ -600,7 +601,13 @@ function endTunnel(villager, dim, mine, seg, why) {
       debugLog(villager, `shaft heading didn't work out - trying ${seg.dx},${seg.dz} instead`);
       return saveMines(mine);
     }
-    mine.done = true;
+    // nowhere works right now (water all round, a build in the way...): the mine stays his, and
+    // he tries again in a while - rather than starting another one next to it
+    Object.assign(seg, firstLeg(seg.ox, seg.oy, seg.oz, seg.dx, seg.dz, mine.levels), { i: seg.i, done: false });
+    mine.bad = [];
+    mine.pausedUntil = world.getAbsoluteTime() + MINE.RETRY_START;
+    debugLog(villager, "nowhere to dig the staircase down from here just now - he'll try again later");
+    return saveMines(mine);
   }
   finishSegment(mine, seg);
 }
